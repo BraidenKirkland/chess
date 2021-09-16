@@ -1,25 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>HTML 5 Boilerplate</title>
+    <title>Chess</title>
     <link rel="stylesheet" href="./styles/style.css">
-  </head>
-  <body>
+</head>
+
+<body>
 
     <table id="board">
-        <tr class="odd-row"><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td></tr>
-        <tr class="even-row"><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td></tr>
-        <tr class="odd-row"><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td></tr>
-        <tr class="even-row"><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td></tr>
-        <tr class="odd-row"><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td></tr>
-        <tr class="even-row"><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td></tr>
-        <tr class="odd-row"><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td></tr>
-        <tr class="even-row"><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td><td class="light-square"></td><td class="dark-square"></td></tr>
+        <tr class="odd-row">
+            <td class="dark-square">
+                <div class="piece" id="rook1-black">&#9820</div>
+            </td>
+            <td class="light-square">
+                <div class="piece" id="knight1-black">&#9822</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece" id="#bishop1-black">&#9821</div>
+            </td>
+            <td class="light-square">
+                <div class="piece" id="queen-black">&#9819</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece" id="king-black">&#9818</div>
+            </td>
+            <td class="light-square">
+                <div class="piece" id="bishop2-black">&#9821</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece" id="knight2-black">&#9822</div>
+            </td>
+            <td class="light-square">
+                <div class="piece" id="rook2-black">&#9820</div>
+            </td>
+        </tr>
+        <tr class="even-row">
+            <td class="light-square">
+                <div class="piece">&#9823</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece">&#9823</div>
+            </td>
+            <td class="light-square">
+                <div class="piece">&#9823</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece">&#9823</div>
+            </td>
+            <td class="light-square">
+                <div class="piece">&#9823</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece">&#9823</div>
+            </td>
+            <td class="light-square">
+                <div class="piece">&#9823</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece">&#9823</div>
+            </td>
+        </tr>
+        <tr class="odd-row">
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+        </tr>
+        <tr class="even-row">
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+        </tr>
+        <tr class="odd-row">
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+        </tr>
+        <tr class="even-row">
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+            <td class="light-square"></td>
+            <td class="dark-square"></td>
+        </tr>
+        <tr class="odd-row">
+            <td class="dark-square">
+                <div class="piece">&#9817</div>
+            </td>
+            <td class="light-square">
+                <div class="piece">&#9817</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece">&#9817</div>
+            </td>
+            <td class="light-square">
+                <div class="piece">&#9817</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece">&#9817</div>
+            </td>
+            <td class="light-square">
+                <div class="piece">&#9817</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece">&#9817</div>
+            </td>
+            <td class="light-square">
+                <div class="piece">&#9817</div>
+            </td>
+        </tr>
+        <tr class="even-row">
+            <td class="light-square">
+                <div class="piece" id="rook1-white">&#9814</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece" id="knight1-white">&#9816</div>
+            </td>
+            <td class="light-square">
+                <div class="piece" id="bishop1-white">&#9815</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece" id="queen-white">&#9813</div>
+            </td>
+            <td class="light-square">
+                <div class="piece" id="king-white">&#9812</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece" id="bishop2-white">&#9815</div>
+            </td>
+            <td class="light-square">
+                <div class="piece" id="knight2-white">&#9816</div>
+            </td>
+            <td class="dark-square">
+                <div class="piece" id="rook2-white">&#9814</div>
+            </td>
+        </tr>
     </table>
 
-	<script src="./scripts/index.js"></script>
-  </body>
+    <div></div>
+
+    <script src="./scripts/index.js"></script>
+</body>
+
 </html>
