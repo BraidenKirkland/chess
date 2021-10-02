@@ -53,6 +53,7 @@ class Piece{
         this.availableMoves();
     }
 
+    
     availableMoves(){
 
         const possibleMoves = [];
