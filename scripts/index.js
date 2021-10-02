@@ -1,16 +1,111 @@
 
+// move format [left-right, up-down]
+
+const king = {
+    // left, right, up, down, up and right, up and left, down and left, down and right
+    moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]],
+    limitations: true,
+    name: 'king'
+}
+
+const queen = {
+    moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]],
+    limitations: false,
+    name: 'queen'
+}
+
+const bishop = {
+    moves: [[1, 1], [1, -1], [-1, -1], [-1, 1]],
+    limitations: false,
+    name: 'bishop'
+}
+
+const knight = {
+    moves: [[-2, 1], [-2, -1], [-1, 2], [-1, -2], [2, 1], [2, -1], [1, 2], [1, -2]],
+    limitations: true,
+    name: 'knight'
+}
+
+const rook = {
+    moves: [[-1, 0], [1, 0], [0, 1], [0, -1]],
+    limitations: false,
+    name: 'rook'
+}
+
+const pawn = {
+    moves: [[0, 2], [0, 1]],
+    killMoves: [[-1, 1], [1, 1]],
+    name: 'pawn'
+}
+
+let pieces = [king, queen, bishop, knight, rook, pawn];
+
 class Piece{
 
     constructor(currentPosition, pieceType, color){
         this.currentPosition = currentPosition;
-        this.pieceType = pieceType;
+        // this.pieceType = pieceType;
+        this.pieceType = pieces.find(piece => piece.name === pieceType);
         this.color = color;
         this.state = 'alive';
+        this.numericPosition = this.getNumericPosition();
+        this.transformBlackPawns(pieceType);
+        this.availableMoves();
     }
 
     availableMoves(){
 
+        const possibleMoves = [];
+        let startingPosition = [Number(this.numericPosition[0]), Number(this.numericPosition[1])];
+        let newPosition = [];
+        // need to make exception for knight - limitations might handle it
+        for(let i=0; i < this.pieceType.moves.length; i++){  
+            for(let j=1; j < 8; j++){
+                newPosition[0] = startingPosition[0] + this.pieceType.moves[i][0]*j;
+                newPosition[1] = startingPosition[1] + this.pieceType.moves[i][1]*j;
+
+                // Make sure the calculated position is on the board
+                if(newPosition[0] > 7 || newPosition[0] < 0){
+                    break;
+                }
+                if(newPosition[1] > 7 || newPosition[1] < 0){
+                    break;
+                }
+                console.log(newPosition);
+                possibleMoves.push(newPosition.slice());
+
+                // If there is a limitation (e.g. king) only take the first move (j=1)
+                if(this.pieceType.limitations){
+                    break;
+                }
+            }
+        }
+
+        console.log(`${this.pieceType.name}-${this.color} ${this.currentPosition} (${this.numericPosition})`);
+        console.log(possibleMoves);
+
         return [];
+    }
+
+    getNumericPosition(){
+        const letters = 'abcdefgh';
+        const numbers = '12345678';
+
+        return String(letters.indexOf(this.currentPosition[0])) + String(numbers.indexOf(this.currentPosition[1]));
+    }
+
+    getDestination(move){
+
+    }
+
+    isDestinationValid(){
+
+    }
+
+    transformBlackPawns(pieceName){
+        if(pieceName === 'pawn' && this.color === 'black'){
+            this.pieceType.moves = this.pieceType.moves.map(([a,b]) => [a*-1, b*-1]);
+        }
     }
 
 }
@@ -27,62 +122,37 @@ class Board {
     addPieces(){
         const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
         allBlackPieces.forEach(piece => {
+
             // Get position of piece from element class
             let position = [...piece.classList][1];
             // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].splice(0,-1);
-            availableBlackPieces.push(new Piece(position, pieceType))
-        })
+            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
+            this.availableBlackPieces.push(new Piece(position, pieceType, 'black'))
+        });
 
-        //console.log([...allBlackPieces[0].classList]);
+        const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
+        allWhitePieces.forEach(piece => {
+            // Get position of piece from element class
+            let position = [...piece.classList][1];
+            // Extract piece info from element id
+            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
+            this.availableWhitePieces.push(new Piece(position, pieceType, 'white'))
+        });
+
+        // console.log(this.availableWhitePieces);
     }
 
 }
 
-// move format [left-right, up-down]
-
-const king = {
-    // left, right, up, down, up and right, up and left, down and left, down and right
-    moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]]
-}
-
-const queen = {
-    moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]]
-}
-
-const bishop = {
-    moves: [[1, 1], [1, -1], [-1, -1], [-1, 1]]
-}
-
-const knight = {
-    moves: [[-2, 1], [-2, -1], [-1, 2], [-1, -2], [2, 1], [2, -1], [1, 2], [1, -2]]
-}
-
-const rook = {
-    moves: [[-1, 0], [1, 0], [0, 1], [0, -1]]
-}
-
-const pawn = {
-    moves: [[0, 2], [0, 1]],
-    killMoves: [[-1, 1], [1, 1]]
-}
 
 
-
-
+// Store all board squares in an array
 const boardPositions = [...document.querySelectorAll('td')].reverse();
 
 let letters = 'hgfedcba';
 let numbers = '12345678';
 
-for (let i = 0; i < 8; i++) {
-    let num = 1;
-
-    for (let j = 0; j < 8; j++) {
-
-    }
-}
-
+// Label each square with its position (as a html class)
 let rowIndex = 0;
 let letter, number;
 boardPositions.forEach((element, index) => {
@@ -115,6 +185,7 @@ const boardPieces = [...document.querySelectorAll(".piece")];
 
 const board = new Board();
 
+// Respond to click events on each button
 boardPieces.forEach(button => {
     button.addEventListener('click', () => {
 
