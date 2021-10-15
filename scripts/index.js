@@ -40,9 +40,9 @@ const pawn = {
 
 let pieces = [king, queen, bishop, knight, rook, pawn];
 
-class Piece{
+class Piece {
 
-    constructor(currentPosition, pieceType, color){
+    constructor(currentPosition, pieceType, color) {
         this.currentPosition = currentPosition;
         // this.pieceType = pieceType;
         this.pieceType = pieces.find(piece => piece.name === pieceType);
@@ -53,30 +53,30 @@ class Piece{
         this.availableMoves();
     }
 
-    
-    availableMoves(){
+
+    availableMoves() {
 
         const possibleMoves = [];
         let startingPosition = [Number(this.numericPosition[0]), Number(this.numericPosition[1])];
         let newPosition = [];
         // need to make exception for knight - limitations might handle it
-        for(let i=0; i < this.pieceType.moves.length; i++){  
-            for(let j=1; j < 8; j++){
-                newPosition[0] = startingPosition[0] + this.pieceType.moves[i][0]*j;
-                newPosition[1] = startingPosition[1] + this.pieceType.moves[i][1]*j;
+        for (let i = 0; i < this.pieceType.moves.length; i++) {
+            for (let j = 1; j < 8; j++) {
+                newPosition[0] = startingPosition[0] + this.pieceType.moves[i][0] * j;
+                newPosition[1] = startingPosition[1] + this.pieceType.moves[i][1] * j;
 
                 // Make sure the calculated position is on the board
-                if(newPosition[0] > 7 || newPosition[0] < 0){
+                if (newPosition[0] > 7 || newPosition[0] < 0) {
                     break;
                 }
-                if(newPosition[1] > 7 || newPosition[1] < 0){
+                if (newPosition[1] > 7 || newPosition[1] < 0) {
                     break;
                 }
                 console.log(newPosition);
                 possibleMoves.push(newPosition.slice());
 
                 // If there is a limitation (e.g. king) only take the first move (j=1)
-                if(this.pieceType.limitations){
+                if (this.pieceType.limitations) {
                     break;
                 }
             }
@@ -88,24 +88,24 @@ class Piece{
         return [];
     }
 
-    getNumericPosition(){
+    getNumericPosition() {
         const letters = 'abcdefgh';
         const numbers = '12345678';
 
         return String(letters.indexOf(this.currentPosition[0])) + String(numbers.indexOf(this.currentPosition[1]));
     }
 
-    getDestination(move){
+    getDestination(move) {
 
     }
 
-    isDestinationValid(){
+    isDestinationValid() {
 
     }
 
-    transformBlackPawns(pieceName){
-        if(pieceName === 'pawn' && this.color === 'black'){
-            this.pieceType.moves = this.pieceType.moves.map(([a,b]) => [a*-1, b*-1]);
+    transformBlackPawns(pieceName) {
+        if (pieceName === 'pawn' && this.color === 'black') {
+            this.pieceType.moves = this.pieceType.moves.map(([a, b]) => [a * -1, b * -1]);
         }
     }
 
@@ -114,13 +114,13 @@ class Piece{
 
 class Board {
 
-    constructor(){
+    constructor() {
         this.availableWhitePieces = [];
         this.availableBlackPieces = [];
         this.addPieces();
     }
 
-    addPieces(){
+    addPieces() {
         const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
         allBlackPieces.forEach(piece => {
 
@@ -177,7 +177,7 @@ boardPositions.forEach((element, index) => {
     }
 
     element.classList.add(letter + number);
-    if(element.firstElementChild != null){
+    if (element.firstElementChild != null) {
         element.firstElementChild.classList.add(letter + number);
     }
 });
