@@ -8,7 +8,7 @@ class Board {
         this.availableWhitePieces = [];
         this.availableBlackPieces = [];
         
-        /* 
+        /*  
         keep track of each square on the board
             - key => square name {a1,a2,...,h7}
             - value => 'w' if white, 'b' if black, null if empty
