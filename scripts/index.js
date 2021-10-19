@@ -1,6 +1,64 @@
 
 // move format [left-right, up-down]
 
+
+class Board {
+
+    constructor() {
+        this.availableWhitePieces = [];
+        this.availableBlackPieces = [];
+        
+        /* 
+        keep track of each square on the board
+            - key => square name {a1,a2,...,h7}
+            - value => 'w' if white, 'b' if black, null if empty
+        */
+        this.squares = {};
+        this.createSquares();
+        this.addPieces();
+    }
+
+    /* 
+        Function to initially sign a null value to 
+        every square on the board.
+    */
+    createSquares(){
+        const letters = 'abcdefgh';
+        const numbers = '12345678';
+
+        for(let i=0; i < letters.length; i++){
+            for(let j=0; j < numbers.length; j++){
+                this.squares[letters[i] + numbers[j]] = null;
+            }
+        }
+    }
+
+    addPieces() {
+        const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
+        allBlackPieces.forEach(piece => {
+
+            // Get position of piece from element class
+            let position = [...piece.classList][1];
+            // Extract piece info from element id
+            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
+            this.availableBlackPieces.push(new Piece(position, pieceType, 'black'));
+            this.squares[position] = 'b'; // mark this position as occupied by a black piece
+        });
+
+        const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
+        allWhitePieces.forEach(piece => {
+            // Get position of piece from element class
+            let position = [...piece.classList][1];
+            // Extract piece info from element id
+            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
+            this.availableWhitePieces.push(new Piece(position, pieceType, 'white'));
+            this.squares[position] = 'w'; // mark this position as occupied by a white piece
+        });
+    }
+
+}
+
+
 const king = {
     // left, right, up, down, up and right, up and left, down and left, down and right
     moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]],
@@ -44,7 +102,6 @@ class Piece {
 
     constructor(currentPosition, pieceType, color) {
         this.currentPosition = currentPosition;
-        // this.pieceType = pieceType;
         this.pieceType = pieces.find(piece => piece.name === pieceType);
         this.color = color;
         this.state = 'alive';
@@ -52,7 +109,6 @@ class Piece {
         this.transformBlackPawns(pieceType);
         this.availableMoves();
     }
-
 
     availableMoves() {
 
@@ -72,7 +128,6 @@ class Piece {
                 if (newPosition[1] > 7 || newPosition[1] < 0) {
                     break;
                 }
-                console.log(newPosition);
                 possibleMoves.push(newPosition.slice());
 
                 // If there is a limitation (e.g. king) only take the first move (j=1)
@@ -81,11 +136,12 @@ class Piece {
                 }
             }
         }
+        if(this.pieceType.name === 'knight'){
+            console.log(`${this.pieceType.name}-${this.color} ${this.currentPosition} (${this.numericPosition})`);
+            console.log(possibleMoves);
+        }
 
-        console.log(`${this.pieceType.name}-${this.color} ${this.currentPosition} (${this.numericPosition})`);
-        console.log(possibleMoves);
-
-        return [];
+        return possibleMoves;
     }
 
     getNumericPosition() {
@@ -103,6 +159,17 @@ class Piece {
 
     }
 
+    validMoves() {
+        const possibleMoves = this.availableMoves();
+        /* 
+            Iterate through all possible moves, checking:
+                - If there is a piece of the same color on that square
+                - Eventually will have to make sure a move does not place the king in check
+
+            * Need a way to access what pieces are occupying each square - maybe a global array of all pieces still alive on the board
+        */
+    }
+
     transformBlackPawns(pieceName) {
         if (pieceName === 'pawn' && this.color === 'black') {
             this.pieceType.moves = this.pieceType.moves.map(([a, b]) => [a * -1, b * -1]);
@@ -110,41 +177,6 @@ class Piece {
     }
 
 }
-
-
-class Board {
-
-    constructor() {
-        this.availableWhitePieces = [];
-        this.availableBlackPieces = [];
-        this.addPieces();
-    }
-
-    addPieces() {
-        const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
-        allBlackPieces.forEach(piece => {
-
-            // Get position of piece from element class
-            let position = [...piece.classList][1];
-            // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            this.availableBlackPieces.push(new Piece(position, pieceType, 'black'))
-        });
-
-        const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
-        allWhitePieces.forEach(piece => {
-            // Get position of piece from element class
-            let position = [...piece.classList][1];
-            // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            this.availableWhitePieces.push(new Piece(position, pieceType, 'white'))
-        });
-
-        // console.log(this.availableWhitePieces);
-    }
-
-}
-
 
 
 // Store all board squares in an array
@@ -185,6 +217,7 @@ boardPositions.forEach((element, index) => {
 const boardPieces = [...document.querySelectorAll(".piece")];
 
 const board = new Board();
+
 
 // Respond to click events on each button
 boardPieces.forEach(button => {
