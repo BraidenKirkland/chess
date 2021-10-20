@@ -155,27 +155,25 @@ class Board {
 
                 // Make sure the calculated position is on the board
                 if (newPosition[0] > 7 || newPosition[0] < 0) {
-                    break;
+                    continue;
                 }
                 if (newPosition[1] > 7 || newPosition[1] < 0) {
-                    break;
+                    continue;
                 }
-                // theoreticalMoves.push(newPosition.slice());
                 theoreticalMoves.push(this.getRegularPosition(newPosition));                
-            }
+            }   
 
             for(let i=0; i < killMoves.length; i++){
                 newPosition[0] = startingPosition[0] + (piece.color === 'white' ? killMoves[i][0] : -1 * killMoves[i][0]);
                 newPosition[1] = startingPosition[1] + (piece.color === 'white' ? killMoves[i][1] : -1 * killMoves[i][1]);
-
                 // Make sure the calculated position is on the board
                 if (newPosition[0] > 7 || newPosition[0] < 0) {
-                    break;
+                    continue;
                 }
                 if (newPosition[1] > 7 || newPosition[1] < 0) {
-                    break;
+                    continue;
                 }
-                // theoreticalMoves.push(newPosition.slice());
+  
                 theoreticalMoves.push(this.getRegularPosition(newPosition));  
             }
         }
@@ -183,14 +181,66 @@ class Board {
         return theoreticalMoves;
     }
 
-    getPath(srcSquareId, dstSquareId, piece){
+    validMove(srcSquareId, dstSquareId, piece){
 
+        // Cannot move to the square if it is occupied by a same color piece
+        if(this.squares[dstSquareId] != null && this.squares[dstSquareId].color === piece.color){
+            return false;
+        }
+
+        // The one and only check for the knight has already been passed
+        // This is because there is no need to check intermediate squares
         if(piece.pieceType.name === 'knight'){
             return true;
         }
 
-        
+        let srcSquareNumeric = [Number(this.getNumericPosition(srcSquareId)[0]), Number(this.getNumericPosition(srcSquareId)[1])];
+        let dstSquareIdNumeric = [Number(this.getNumericPosition(dstSquareId)[0]), Number(this.getNumericPosition(dstSquareId)[1])];
 
+        let horizontal = dstSquareIdNumeric[0] - srcSquareNumeric[0];
+        let vertical = dstSquareIdNumeric[1] - srcSquareNumeric[1];
+
+        let difference = [horizontal, vertical];
+        let verticalCounter = 1, horizontalCounter = 1;
+        if(vertical < 0){
+            verticalCounter = -1;
+        }
+        if(horizontal < 0){
+            horizontalCounter = -1;
+        }
+        if(vertical === 0){
+            verticalCounter = 0;
+        }
+        if(horizontal === 0){
+            horizontalCounter = 0;
+        }
+
+        let intermediatePosition = [];
+        let intermediateSquare;
+        for(let i=1; i < Math.max(Math.abs(vertical), Math.abs(horizontal)); i++){
+
+            intermediatePosition[0] = srcSquareNumeric[0] + horizontalCounter*i;
+            intermediatePosition[1] = srcSquareNumeric[1] + verticalCounter*i;
+            intermediateSquare = this.getRegularPosition(intermediatePosition);
+            // console.log(`Checking intermediate square ${intermediateSquare}`);
+
+            if(this.squares[intermediateSquare] == null){
+                continue;
+            }
+            if(this.squares[intermediateSquare].color === piece.color){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    getValidMoves(squareId) {
+        let currentPiece = this.squares[squareId];
+        let theoreticalMoves = this.theoreticalMoves(squareId, currentPiece);
+        let validMoves = theoreticalMoves.filter(dstSquareId => this.validMove(squareId, dstSquareId, currentPiece));
+
+        return validMoves;
     }
 }
 
@@ -250,7 +300,7 @@ boardPieces.forEach(button => {
         let squareId = eventObject.target.classList[1];
         let clickedPiece = board.getSquares()[squareId];
         console.log(squareId + ' - ' + clickedPiece.pieceType.name + ' - ' + clickedPiece.color);
-        console.log(board.theoreticalMoves(squareId, clickedPiece));
-        console.log();
+        let validMoves = board.getValidMoves(squareId);
+        console.log(validMoves);
     });
 });
