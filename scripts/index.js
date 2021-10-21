@@ -48,6 +48,7 @@ class Board {
         // arrays to track pieces as they are killed
         this.whitePiecesKilled = [];
         this.blackPiecesKilled = [];
+        this.selectedElement = null;
         
         /*  
         keep track of each square on the board
@@ -249,8 +250,17 @@ class Piece {
     constructor(pieceType, color) {
         this.pieceType = pieces.find(piece => piece.name === pieceType);
         this.color = color;
+        this.squareId = null;
     }
 
+}
+
+/* 
+    Set backgroundColor of 'element' to 'color'
+*/
+function highlightElement(element, color) {
+
+    element.style.backgroundColor = color;
 }
 
 // Store all board squares in an array
@@ -297,10 +307,50 @@ const board = new Board();
 boardPieces.forEach(button => {
     button.addEventListener('click', (eventObject) => {
 
+        
         let squareId = eventObject.target.classList[1];
         let clickedPiece = board.getSquares()[squareId];
-        console.log(squareId + ' - ' + clickedPiece.pieceType.name + ' - ' + clickedPiece.color);
+        clickedPiece.squareId = squareId;
+        let parentElementOfButton = document.querySelector("." + squareId);
         let validMoves = board.getValidMoves(squareId);
-        console.log(validMoves);
+        
+        // Case 1 - No element currently selected
+        if(board.selectedElement === null){
+            board.selectedElement = clickedPiece;
+            highlightElement(parentElementOfButton, 'yellow');
+            validMoves.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, 'yellow');
+            });
+        // Case 2 - Clicked on the element already selected
+        }else if(squareId === board.selectedElement.squareId){
+            highlightElement(parentElementOfButton, null);
+            validMoves.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, null);
+            });
+
+            // indicate no element selected
+            board.selectedElement = null;
+        // Case 3 - An element is already selected and the user clicked on a different element
+        }else{
+            let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
+            highlightElement(previousParentElement, null);
+            let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
+            validMovesOfPrevious.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, null);
+            });
+
+            board.selectedElement = clickedPiece;
+            highlightElement(parentElementOfButton, 'yellow');
+            validMoves.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, 'yellow');
+            });
+        }
+
+        return;
+
     });
 });
