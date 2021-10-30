@@ -195,20 +195,28 @@ class Board {
             return true;
         }
 
+        // Get the numeric id's of the source and destination squares
         let srcSquareNumeric = [Number(this.getNumericPosition(srcSquareId)[0]), Number(this.getNumericPosition(srcSquareId)[1])];
         let dstSquareIdNumeric = [Number(this.getNumericPosition(dstSquareId)[0]), Number(this.getNumericPosition(dstSquareId)[1])];
 
+        // Calculate the horizontal and vertical offsets
         let horizontal = dstSquareIdNumeric[0] - srcSquareNumeric[0];
         let vertical = dstSquareIdNumeric[1] - srcSquareNumeric[1];
 
         let difference = [horizontal, vertical];
         let verticalCounter = 1, horizontalCounter = 1;
+
+        // Check if destination square is below the current square
         if(vertical < 0){
             verticalCounter = -1;
         }
+
+        // Check if destination square is to the left of the current square
         if(horizontal < 0){
             horizontalCounter = -1;
         }
+
+        // Check if the move is purely horizontal or vertical
         if(vertical === 0){
             verticalCounter = 0;
         }
@@ -216,14 +224,38 @@ class Board {
             horizontalCounter = 0;
         }
 
+        /* 
+            Special case for pawns
+            If the move has a horizontal component, then it must be a kill move.
+            This is only allowed if the destination square is occupied by an enemy piece
+         */
+        if(piece.pieceType.name === 'pawn' && horizontal !== 0){
+            let dstSquare = this.getRegularPosition(dstSquareIdNumeric);
+            // The move is not allowd if the destination square has no piece or a piece of the same color
+            if(this.squares[dstSquare] === null || this.squares[dstSquare].color === piece.color){
+                return false;
+            }
+            return true;
+        }
+
+        if(piece.pieceType.name === 'pawn' && horizontal === 0){
+            let dstSquare = this.getRegularPosition(dstSquareIdNumeric);
+            // The move is not allowd if the destination square is occupied by a piece of any color
+            if(this.squares[dstSquare] !== null){
+                return false;
+            }
+            return true;
+        }
+
+
         let intermediatePosition = [];
         let intermediateSquare;
+        let enemyPiecesOnPath = 0;
         for(let i=1; i < Math.max(Math.abs(vertical), Math.abs(horizontal)); i++){
 
             intermediatePosition[0] = srcSquareNumeric[0] + horizontalCounter*i;
             intermediatePosition[1] = srcSquareNumeric[1] + verticalCounter*i;
             intermediateSquare = this.getRegularPosition(intermediatePosition);
-            // console.log(`Checking intermediate square ${intermediateSquare}`);
 
             if(this.squares[intermediateSquare] == null){
                 continue;
@@ -231,6 +263,16 @@ class Board {
             if(this.squares[intermediateSquare].color === piece.color){
                 return false;
             }
+
+            // Track how many enemy pieces have been encountered on this path
+            // Only the first one encountered can be killed
+            if(this.squares[intermediateSquare].color !== piece.color){
+                enemyPiecesOnPath++;
+            }
+        }
+
+        if(enemyPiecesOnPath > 0){
+            return false;
         }
 
         return true;
