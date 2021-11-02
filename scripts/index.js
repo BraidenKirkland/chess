@@ -398,6 +398,9 @@ boardPieces.forEach(button => {
         let clickedPiece = board.getSquares()[squareId];
         clickedPiece.squareId = squareId;
         let parentElementOfButton = document.querySelector("." + squareId);
+
+        // Need to get valid moves of previous (if there was a previous)
+
         let validMoves = board.getValidMoves(squareId);
         
         // Case 1 - No element currently selected
@@ -433,27 +436,36 @@ boardPieces.forEach(button => {
                   If buttons, how to identify them?
             */
 
-            
-
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
 
             if(validMovesOfPrevious.includes(squareId)){
-                // console.log(clickedPiece);
+                
                 highlightElement(parentElementOfButton, null);  // BAK
                 highlightElement(previousParentElement, null);  // BAK
                 board.takePiece(board.selectedElement, clickedPiece);
-                board.selectedElement.clickedPiece = null;
+                
+                highlightElement(previousParentElement, null);
+                validMovesOfPrevious.forEach((square) => {
+                    let dstSqaure = document.querySelector('.' + square);
+                    highlightElement(dstSqaure, null);
+                });
 
+                board.selectedElement = null;  // BAK
                 return;
             }
 
-            // Remove highlighting from the previously clicked element
+            // Remove highlighting from the previously clicked element and its valid move squares
             highlightElement(previousParentElement, null);
             validMovesOfPrevious.forEach((square) => {
                 let dstSqaure = document.querySelector('.' + square);
                 highlightElement(dstSqaure, null);
             });
+
+            if(board.squares[squareId] == null){
+                board.selectedElement = null;
+                return;
+            }
 
             board.selectedElement = clickedPiece;
             highlightElement(parentElementOfButton, 'yellow');
