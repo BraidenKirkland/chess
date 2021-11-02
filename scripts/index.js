@@ -313,8 +313,6 @@ class Board {
         currentSquareButton.classList.add(victimSquareId);
 
         // TODO: Update id of the button to containing the killing piece
-        // console.log(currentSquareButton.classList);
-        // The first index (0) in the array contained text so I replaced index 1
         dstSquareTableCell.replaceChild(currentSquareButton, dstSquareTableCell.childNodes[1]);
         killingPiece.squareId = victimSquareId;
 
@@ -374,7 +372,9 @@ boardPositions.forEach((element, index) => {
         number = '8';
     }
 
+    // add board position to <td> class list
     element.classList.add(letter + number);
+    // add board position to <button> class list
     if (element.firstElementChild != null) {
         element.firstElementChild.classList.add(letter + number);
     }

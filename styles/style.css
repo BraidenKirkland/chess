@@ -18,7 +18,7 @@ td{
     padding: 0;
 }
 
-.piece{
+.piece, .empty{
     margin: 0;
     padding: 0;
     font-size: 3.5em;
@@ -28,7 +28,7 @@ td{
     height: 100%;
 }
 
-.piece:hover{
+.piece:hover, .empty:hover{
     cursor: pointer;
     opacity: 0.7;
 }
