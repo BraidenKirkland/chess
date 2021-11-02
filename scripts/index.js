@@ -285,6 +285,46 @@ class Board {
 
         return validMoves;
     }
+
+    /* 
+    Method to swap the killing piece with the piece being killed.
+    TODO: Remove old highlight from the piece that was killed
+    */
+    takePiece(killingPiece, victimPiece){
+        
+        // Get the current square id of each piece
+        let victimSquareId = victimPiece.squareId.slice();
+        let killingSquareId = killingPiece.squareId.slice();
+
+        // Update squares object to reflect new pieces
+        this.squares[victimSquareId] = killingPiece;
+        this.squares[killingSquareId] = null;
+        
+        let dstSquareList = document.getElementsByClassName(victimSquareId);
+        let dstSquareTableCell = dstSquareList[0];
+        let dstSquareButton = dstSquareList[1];
+
+        let currentSquareList = document.getElementsByClassName(killingSquareId);
+        let currentSquareTableCell = currentSquareList[0];
+        let currentSquareButton = currentSquareList[1];
+
+        // Update the square id in the button's class
+        currentSquareButton.classList.remove(killingSquareId)
+        currentSquareButton.classList.add(victimSquareId);
+
+        // TODO: Update id of the button to containing the killing piece
+        // console.log(currentSquareButton.classList);
+        // The first index (0) in the array contained text so I replaced index 1
+        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareTableCell.childNodes[1]);
+        killingPiece.squareId = victimSquareId;
+
+        if(victimPiece.color === 'white'){
+            this.whitePiecesKilled.push(victimPiece)
+            return;
+        }
+
+        this.blackPiecesKilled.push(victimPiece);
+    }
 }
 
 class Piece {
@@ -349,7 +389,11 @@ const board = new Board();
 boardPieces.forEach(button => {
     button.addEventListener('click', (eventObject) => {
 
-        
+        /* 
+        The selected element field of the board is used to track what 
+        piece was clicked.
+        */
+
         let squareId = eventObject.target.classList[1];
         let clickedPiece = board.getSquares()[squareId];
         clickedPiece.squareId = squareId;
@@ -364,6 +408,7 @@ boardPieces.forEach(button => {
                 let dstSqaure = document.querySelector('.' + square);
                 highlightElement(dstSqaure, 'yellow');
             });
+
         // Case 2 - Clicked on the element already selected
         }else if(squareId === board.selectedElement.squareId){
             highlightElement(parentElementOfButton, null);
@@ -374,11 +419,37 @@ boardPieces.forEach(button => {
 
             // indicate no element selected
             board.selectedElement = null;
+
         // Case 3 - An element is already selected and the user clicked on a different element
         }else{
+
+            /* 
+                Check if the move is valid
+                If the move is valid
+                    - move the piece there
+                    - remove the highlighting
+
+                How to check if empty squares are clicked? Maybe make them into buttons?
+                  If buttons, how to identify them?
+            */
+
+            
+
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
-            highlightElement(previousParentElement, null);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
+
+            if(validMovesOfPrevious.includes(squareId)){
+                // console.log(clickedPiece);
+                highlightElement(parentElementOfButton, null);  // BAK
+                highlightElement(previousParentElement, null);  // BAK
+                board.takePiece(board.selectedElement, clickedPiece);
+                board.selectedElement.clickedPiece = null;
+
+                return;
+            }
+
+            // Remove highlighting from the previously clicked element
+            highlightElement(previousParentElement, null);
             validMovesOfPrevious.forEach((square) => {
                 let dstSqaure = document.querySelector('.' + square);
                 highlightElement(dstSqaure, null);
