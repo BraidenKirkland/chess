@@ -1,64 +1,6 @@
 
 // move format [left-right, up-down]
 
-
-class Board {
-
-    constructor() {
-        this.availableWhitePieces = [];
-        this.availableBlackPieces = [];
-        
-        /* 
-        keep track of each square on the board
-            - key => square name {a1,a2,...,h7}
-            - value => 'w' if white, 'b' if black, null if empty
-        */
-        this.squares = {};
-        this.createSquares();
-        this.addPieces();
-    }
-
-    /* 
-        Function to initially sign a null value to 
-        every square on the board.
-    */
-    createSquares(){
-        const letters = 'abcdefgh';
-        const numbers = '12345678';
-
-        for(let i=0; i < letters.length; i++){
-            for(let j=0; j < numbers.length; j++){
-                this.squares[letters[i] + numbers[j]] = null;
-            }
-        }
-    }
-
-    addPieces() {
-        const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
-        allBlackPieces.forEach(piece => {
-
-            // Get position of piece from element class
-            let position = [...piece.classList][1];
-            // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            this.availableBlackPieces.push(new Piece(position, pieceType, 'black'));
-            this.squares[position] = 'b'; // mark this position as occupied by a black piece
-        });
-
-        const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
-        allWhitePieces.forEach(piece => {
-            // Get position of piece from element class
-            let position = [...piece.classList][1];
-            // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            this.availableWhitePieces.push(new Piece(position, pieceType, 'white'));
-            this.squares[position] = 'w'; // mark this position as occupied by a white piece
-        });
-    }
-
-}
-
-
 const king = {
     // left, right, up, down, up and right, up and left, down and left, down and right
     moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]],
@@ -91,35 +33,101 @@ const rook = {
 }
 
 const pawn = {
-    moves: [[0, 2], [0, 1]],
+    get fwdMoves() { return this.moveCount === 0 ? [[0, 2], [0, 1]] : [[0, 1]] },
     killMoves: [[-1, 1], [1, 1]],
-    name: 'pawn'
+    name: 'pawn',
+    moveCount: 0
 }
 
 let pieces = [king, queen, bishop, knight, rook, pawn];
 
-class Piece {
+class Board {
 
-    constructor(currentPosition, pieceType, color) {
-        this.currentPosition = currentPosition;
-        this.pieceType = pieces.find(piece => piece.name === pieceType);
-        this.color = color;
-        this.state = 'alive';
-        this.numericPosition = this.getNumericPosition();
-        this.transformBlackPawns(pieceType);
-        this.availableMoves();
+    constructor() {
+
+        // arrays to track pieces as they are killed
+        this.whitePiecesKilled = [];
+        this.blackPiecesKilled = [];
+        this.selectedElement = null;
+        
+        /*  
+        keep track of each square on the board
+        */
+        this.squares = {};
+        this.createSquares();
+        this.addPiecesToBoard();
     }
 
-    availableMoves() {
+    getSquares(){
+        return this.squares;
+    }
 
-        const possibleMoves = [];
-        let startingPosition = [Number(this.numericPosition[0]), Number(this.numericPosition[1])];
+    /* 
+        Function to initially sign a null value to 
+        every square on the board.
+    */
+    createSquares(){
+        const letters = 'abcdefgh';
+        const numbers = '12345678';
+
+        for(let i=0; i < letters.length; i++){
+            for(let j=0; j < numbers.length; j++){
+                this.squares[letters[i] + numbers[j]] = null;
+            }
+        }
+    }
+
+    addPiecesToBoard() {
+        const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
+        allBlackPieces.forEach(piece => {
+
+            // Get position of piece from element class
+            let position = [...piece.classList][1];
+            // Extract piece info from element id
+            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
+             // mark this position as occupied by a black piece
+            this.squares[position] = new Piece(pieceType, 'black');
+        });
+
+        const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
+        allWhitePieces.forEach(piece => {
+
+            // Get position of piece from element class
+            let position = [...piece.classList][1];
+            // Extract piece info from element id
+            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
+            // mark this position as occupied by a white piece
+            this.squares[position] = new Piece(pieceType, 'white'); 
+        });
+    }
+
+    /* e.g. a1 -> 00 , h8 -> (77) */
+    getNumericPosition(regularPosition){
+        const letters = 'abcdefgh';
+        const numbers = '12345678';
+
+        return String(letters.indexOf(regularPosition[0])) + String(numbers.indexOf(regularPosition[1]));
+    }
+
+    /* e.g. 00 -> a1 , 77 -> h8 */
+    getRegularPosition(numericPosition){
+        const letters = 'abcdefgh';
+        const numbers = '12345678';
+
+        return String(letters[Number(numericPosition[0])] + numbers[Number(numericPosition[1])]);
+    }
+
+    theoreticalMoves(srcSquareId, piece){
+        const theoreticalMoves = [];
+        let startingPosition = [Number(this.getNumericPosition(srcSquareId)[0]), Number(this.getNumericPosition(srcSquareId)[1])];
         let newPosition = [];
-        // need to make exception for knight - limitations might handle it
-        for (let i = 0; i < this.pieceType.moves.length; i++) {
-            for (let j = 1; j < 8; j++) {
-                newPosition[0] = startingPosition[0] + this.pieceType.moves[i][0] * j;
-                newPosition[1] = startingPosition[1] + this.pieceType.moves[i][1] * j;
+
+        let isPawn = piece.pieceType.name === 'pawn';
+
+        for(let i=0; !isPawn && i < piece.pieceType.moves.length; i++){
+            for(let j=1; j < 8; j++){
+                newPosition[0] = startingPosition[0] + piece.pieceType.moves[i][0] * j;
+                newPosition[1] = startingPosition[1] + piece.pieceType.moves[i][1] * j;
 
                 // Make sure the calculated position is on the board
                 if (newPosition[0] > 7 || newPosition[0] < 0) {
@@ -128,56 +136,212 @@ class Piece {
                 if (newPosition[1] > 7 || newPosition[1] < 0) {
                     break;
                 }
-                possibleMoves.push(newPosition.slice());
+                // theoreticalMoves.push(newPosition.slice());
+                theoreticalMoves.push(this.getRegularPosition(newPosition));
 
                 // If there is a limitation (e.g. king) only take the first move (j=1)
-                if (this.pieceType.limitations) {
+                // This works for knights as well because there is only one possible move in each direction
+                if (piece.pieceType.limitations) {
                     break;
-                }
+                }                  
             }
         }
-        if(this.pieceType.name === 'knight'){
-            console.log(`${this.pieceType.name}-${this.color} ${this.currentPosition} (${this.numericPosition})`);
-            console.log(possibleMoves);
+
+        if(isPawn){
+            let fwdMoves = piece.pieceType.fwdMoves;
+            let killMoves = piece.pieceType.killMoves;
+            for(let i=0; i < fwdMoves.length; i++){
+                newPosition[0] = startingPosition[0] + (piece.color === 'white' ? fwdMoves[i][0] : -1 * fwdMoves[i][0]);
+                newPosition[1] = startingPosition[1] + (piece.color === 'white' ? fwdMoves[i][1] : -1 * fwdMoves[i][1]);
+
+                // Make sure the calculated position is on the board
+                if (newPosition[0] > 7 || newPosition[0] < 0) {
+                    continue;
+                }
+                if (newPosition[1] > 7 || newPosition[1] < 0) {
+                    continue;
+                }
+                theoreticalMoves.push(this.getRegularPosition(newPosition));                
+            }   
+
+            for(let i=0; i < killMoves.length; i++){
+                newPosition[0] = startingPosition[0] + (piece.color === 'white' ? killMoves[i][0] : -1 * killMoves[i][0]);
+                newPosition[1] = startingPosition[1] + (piece.color === 'white' ? killMoves[i][1] : -1 * killMoves[i][1]);
+                // Make sure the calculated position is on the board
+                if (newPosition[0] > 7 || newPosition[0] < 0) {
+                    continue;
+                }
+                if (newPosition[1] > 7 || newPosition[1] < 0) {
+                    continue;
+                }
+  
+                theoreticalMoves.push(this.getRegularPosition(newPosition));  
+            }
         }
 
-        return possibleMoves;
+        return theoreticalMoves;
     }
 
-    getNumericPosition() {
-        const letters = 'abcdefgh';
-        const numbers = '12345678';
+    validMove(srcSquareId, dstSquareId, piece){
 
-        return String(letters.indexOf(this.currentPosition[0])) + String(numbers.indexOf(this.currentPosition[1]));
-    }
+        // Cannot move to the square if it is occupied by a same color piece
+        if(this.squares[dstSquareId] != null && this.squares[dstSquareId].color === piece.color){
+            return false;
+        }
 
-    getDestination(move) {
+        // The one and only check for the knight has already been passed
+        // This is because there is no need to check intermediate squares
+        if(piece.pieceType.name === 'knight'){
+            return true;
+        }
 
-    }
+        // Get the numeric id's of the source and destination squares
+        let srcSquareNumeric = [Number(this.getNumericPosition(srcSquareId)[0]), Number(this.getNumericPosition(srcSquareId)[1])];
+        let dstSquareIdNumeric = [Number(this.getNumericPosition(dstSquareId)[0]), Number(this.getNumericPosition(dstSquareId)[1])];
 
-    isDestinationValid() {
+        // Calculate the horizontal and vertical offsets
+        let horizontal = dstSquareIdNumeric[0] - srcSquareNumeric[0];
+        let vertical = dstSquareIdNumeric[1] - srcSquareNumeric[1];
 
-    }
+        let difference = [horizontal, vertical];
+        let verticalCounter = 1, horizontalCounter = 1;
 
-    validMoves() {
-        const possibleMoves = this.availableMoves();
+        // Check if destination square is below the current square
+        if(vertical < 0){
+            verticalCounter = -1;
+        }
+
+        // Check if destination square is to the left of the current square
+        if(horizontal < 0){
+            horizontalCounter = -1;
+        }
+
+        // Check if the move is purely horizontal or vertical
+        if(vertical === 0){
+            verticalCounter = 0;
+        }
+        if(horizontal === 0){
+            horizontalCounter = 0;
+        }
+
         /* 
-            Iterate through all possible moves, checking:
-                - If there is a piece of the same color on that square
-                - Eventually will have to make sure a move does not place the king in check
+            Special case for pawns
+            If the move has a horizontal component, then it must be a kill move.
+            This is only allowed if the destination square is occupied by an enemy piece
+         */
+        if(piece.pieceType.name === 'pawn' && horizontal !== 0){
+            let dstSquare = this.getRegularPosition(dstSquareIdNumeric);
+            // The move is not allowd if the destination square has no piece or a piece of the same color
+            if(this.squares[dstSquare] === null || this.squares[dstSquare].color === piece.color){
+                return false;
+            }
+            return true;
+        }
 
-            * Need a way to access what pieces are occupying each square - maybe a global array of all pieces still alive on the board
-        */
+        if(piece.pieceType.name === 'pawn' && horizontal === 0){
+            let dstSquare = this.getRegularPosition(dstSquareIdNumeric);
+            // The move is not allowd if the destination square is occupied by a piece of any color
+            if(this.squares[dstSquare] !== null){
+                return false;
+            }
+            return true;
+        }
+
+
+        let intermediatePosition = [];
+        let intermediateSquare;
+        let enemyPiecesOnPath = 0;
+        for(let i=1; i < Math.max(Math.abs(vertical), Math.abs(horizontal)); i++){
+
+            intermediatePosition[0] = srcSquareNumeric[0] + horizontalCounter*i;
+            intermediatePosition[1] = srcSquareNumeric[1] + verticalCounter*i;
+            intermediateSquare = this.getRegularPosition(intermediatePosition);
+
+            if(this.squares[intermediateSquare] == null){
+                continue;
+            }
+            if(this.squares[intermediateSquare].color === piece.color){
+                return false;
+            }
+
+            // Track how many enemy pieces have been encountered on this path
+            // Only the first one encountered can be killed
+            if(this.squares[intermediateSquare].color !== piece.color){
+                enemyPiecesOnPath++;
+            }
+        }
+
+        if(enemyPiecesOnPath > 0){
+            return false;
+        }
+
+        return true;
     }
 
-    transformBlackPawns(pieceName) {
-        if (pieceName === 'pawn' && this.color === 'black') {
-            this.pieceType.moves = this.pieceType.moves.map(([a, b]) => [a * -1, b * -1]);
+    getValidMoves(squareId) {
+        let currentPiece = this.squares[squareId];
+        let theoreticalMoves = this.theoreticalMoves(squareId, currentPiece);
+        let validMoves = theoreticalMoves.filter(dstSquareId => this.validMove(squareId, dstSquareId, currentPiece));
+
+        return validMoves;
+    }
+
+    /* 
+    Method to swap the killing piece with the piece being killed.
+    TODO: Remove old highlight from the piece that was killed
+    */
+    takePiece(killingPiece, victimPiece){
+        
+        // Get the current square id of each piece
+        let victimSquareId = victimPiece.squareId.slice();
+        let killingSquareId = killingPiece.squareId.slice();
+
+        // Update squares object to reflect new pieces
+        this.squares[victimSquareId] = killingPiece;
+        this.squares[killingSquareId] = null;
+        
+        let dstSquareList = document.getElementsByClassName(victimSquareId);
+        let dstSquareTableCell = dstSquareList[0];
+        let dstSquareButton = dstSquareList[1];
+
+        let currentSquareList = document.getElementsByClassName(killingSquareId);
+        let currentSquareTableCell = currentSquareList[0];
+        let currentSquareButton = currentSquareList[1];
+
+        // Update the square id in the button's class
+        currentSquareButton.classList.remove(killingSquareId)
+        currentSquareButton.classList.add(victimSquareId);
+
+        // TODO: Update id of the button to containing the killing piece
+        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareTableCell.childNodes[1]);
+        killingPiece.squareId = victimSquareId;
+
+        if(victimPiece.color === 'white'){
+            this.whitePiecesKilled.push(victimPiece)
+            return;
         }
+
+        this.blackPiecesKilled.push(victimPiece);
+    }
+}
+
+class Piece {
+
+    constructor(pieceType, color) {
+        this.pieceType = pieces.find(piece => piece.name === pieceType);
+        this.color = color;
+        this.squareId = null;
     }
 
 }
 
+/* 
+    Set backgroundColor of 'element' to 'color'
+*/
+function highlightElement(element, color) {
+
+    element.style.backgroundColor = color;
+}
 
 // Store all board squares in an array
 const boardPositions = [...document.querySelectorAll('td')].reverse();
@@ -208,7 +372,9 @@ boardPositions.forEach((element, index) => {
         number = '8';
     }
 
+    // add board position to <td> class list
     element.classList.add(letter + number);
+    // add board position to <button> class list
     if (element.firstElementChild != null) {
         element.firstElementChild.classList.add(letter + number);
     }
@@ -221,7 +387,95 @@ const board = new Board();
 
 // Respond to click events on each button
 boardPieces.forEach(button => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', (eventObject) => {
+
+        /* 
+        The selected element field of the board is used to track what 
+        piece was clicked.
+        */
+
+        let squareId = eventObject.target.classList[1];
+        let clickedPiece = board.getSquares()[squareId];
+        clickedPiece.squareId = squareId;
+        let parentElementOfButton = document.querySelector("." + squareId);
+
+        // Need to get valid moves of previous (if there was a previous)
+
+        let validMoves = board.getValidMoves(squareId);
+        
+        // Case 1 - No element currently selected
+        if(board.selectedElement === null){
+            board.selectedElement = clickedPiece;
+            highlightElement(parentElementOfButton, 'yellow');
+            validMoves.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, 'yellow');
+            });
+
+        // Case 2 - Clicked on the element already selected
+        }else if(squareId === board.selectedElement.squareId){
+            highlightElement(parentElementOfButton, null);
+            validMoves.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, null);
+            });
+
+            // indicate no element selected
+            board.selectedElement = null;
+
+        // Case 3 - An element is already selected and the user clicked on a different element
+        }else{
+
+            /* 
+                Check if the move is valid
+                If the move is valid
+                    - move the piece there
+                    - remove the highlighting
+
+                How to check if empty squares are clicked? Maybe make them into buttons?
+                  If buttons, how to identify them?
+            */
+
+            let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
+            let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
+
+            if(validMovesOfPrevious.includes(squareId)){
+                
+                highlightElement(parentElementOfButton, null);  // BAK
+                highlightElement(previousParentElement, null);  // BAK
+                board.takePiece(board.selectedElement, clickedPiece);
+                
+                highlightElement(previousParentElement, null);
+                validMovesOfPrevious.forEach((square) => {
+                    let dstSqaure = document.querySelector('.' + square);
+                    highlightElement(dstSqaure, null);
+                });
+
+                board.selectedElement = null;  // BAK
+                return;
+            }
+
+            // Remove highlighting from the previously clicked element and its valid move squares
+            highlightElement(previousParentElement, null);
+            validMovesOfPrevious.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, null);
+            });
+
+            if(board.squares[squareId] == null){
+                board.selectedElement = null;
+                return;
+            }
+
+            board.selectedElement = clickedPiece;
+            highlightElement(parentElementOfButton, 'yellow');
+            validMoves.forEach((square) => {
+                let dstSqaure = document.querySelector('.' + square);
+                highlightElement(dstSqaure, 'yellow');
+            });
+        }
+
+        return;
 
     });
 });
