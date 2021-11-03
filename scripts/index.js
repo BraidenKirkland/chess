@@ -380,7 +380,7 @@ boardPositions.forEach((element, index) => {
     }
 });
 
-const boardPieces = [...document.querySelectorAll(".piece")];
+const boardPieces = [...document.querySelectorAll(".piece, .empty")];
 
 const board = new Board();
 
@@ -395,16 +395,27 @@ boardPieces.forEach(button => {
         */
 
         let squareId = eventObject.target.classList[1];
+        console.log(board.squares[squareId]);
         let clickedPiece = board.getSquares()[squareId];
-        clickedPiece.squareId = squareId;
+        if(clickedPiece !== null){
+            clickedPiece.squareId = squareId;
+        }
         let parentElementOfButton = document.querySelector("." + squareId);
 
         // Need to get valid moves of previous (if there was a previous)
 
-        let validMoves = board.getValidMoves(squareId);
+        let validMoves;
+        if(clickedPiece !== null){
+            validMoves = board.getValidMoves(squareId);
+        }else{
+            validMoves = [];
+        }
         
         // Case 1 - No element currently selected
         if(board.selectedElement === null){
+            if(clickedPiece === null){
+                return;
+            }
             board.selectedElement = clickedPiece;
             highlightElement(parentElementOfButton, 'yellow');
             validMoves.forEach((square) => {
@@ -423,8 +434,85 @@ boardPieces.forEach(button => {
             // indicate no element selected
             board.selectedElement = null;
 
-        // Case 3 - An element is already selected and the user clicked on a different element
-        }else{
+
+        // Case 3 - An piece is already selected and the user clicked on an empty square
+        }else if(board.squares[squareId] === null){
+
+            // Get previously selected button and valid moves of the previous button
+            let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
+            let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
+
+            if(validMovesOfPrevious.includes(squareId)){
+                
+                highlightElement(parentElementOfButton, null);  // BAK
+                highlightElement(previousParentElement, null);  // BAK
+                
+                highlightElement(previousParentElement, null);
+                validMovesOfPrevious.forEach((square) => {
+                    let dstSqaure = document.querySelector('.' + square);
+                    highlightElement(dstSqaure, null);
+                });
+            }
+
+                // Determine the square id of the previously clicked piece
+                let pieceSquareId = board.selectedElement.squareId.slice();
+
+                // Update the square id of the piece to be the square id of the square it is moving to
+                board.selectedElement.squareId = squareId;
+
+                // Get table cell (<td>) and button elements for destination (empty) square
+                let dstSquareTableCell = document.getElementsByClassName(squareId)[0];
+                let dstSquareButton = document.getElementsByClassName(squareId)[1];
+
+                 // Get table cell (<td>) and button elements for piece square
+                let pieceSquareTableCell = document.getElementsByClassName(pieceSquareId)[0];
+                let pieceSquareButton = document.getElementsByClassName(pieceSquareId)[1];
+
+                // Need to replace the children of the table cells
+
+                let dstSquareChildToReplace = [];
+                let pieceSquareChildToReplace = [];
+
+                // Get the 
+                for(let i=0; i < dstSquareTableCell.childNodes.length; i++){
+                    if(dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE){
+                        dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
+                    }
+                }
+
+                for(let i=0; i < pieceSquareTableCell.childNodes.length; i++){
+                    if(pieceSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE){
+                        pieceSquareChildToReplace.push(pieceSquareTableCell.childNodes[i]);
+                    }
+                }
+
+                // Replace the empty square's button with the piece's button
+                dstSquareTableCell.replaceChild(pieceSquareButton, dstSquareChildToReplace[0]);
+                // Replace the piece's button with the empty square's button
+                // The previous operation should have remove the child button from the piece square
+                // which it why it is an appendChild and not a replaceChild
+                pieceSquareTableCell.appendChild(dstSquareButton);
+
+
+                // Swap the square ID's of the two buttons
+                dstSquareButton.classList.remove(squareId);
+                dstSquareButton.classList.add(pieceSquareId);
+
+                pieceSquareButton.classList.remove(pieceSquareId);
+                pieceSquareButton.classList.add(squareId);
+
+                // Update the squares object that tracks every square
+                board.squares[squareId] = board.squares[pieceSquareId];
+                board.squares[pieceSquareId] = null;
+
+                // console.log(board.squares[squareId]);
+
+                board.selectedElement = null;  // BAK
+                return;
+
+        }
+        // Case 4 - An element is already selected and the user clicked on a different element
+        else{
 
             /* 
                 Check if the move is valid
