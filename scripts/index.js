@@ -55,6 +55,7 @@ class Board {
         this.whitePiecesKilled = [];
         this.blackPiecesKilled = [];
         this.selectedElement = null;
+        this.turn = 'white';
         
         /*  
         keep track of each square on the board
@@ -62,6 +63,11 @@ class Board {
         this.squares = {};
         this.createSquares();
         this.addPiecesToBoard();
+    }
+
+    changeTurn(){
+        this.turn = (this.turn === 'white' ? 'black' : 'white');
+        console.log("The turn belongs to " + this.turn);
     }
 
     getSquares(){
@@ -456,6 +462,7 @@ boardPieces.forEach(button => {
         console.log(board.squares[squareId]);
         let clickedPiece = board.getSquares()[squareId];
         if(clickedPiece !== null){
+
             clickedPiece.squareId = squareId;
         }
         let parentElementOfButton = document.querySelector("." + squareId);
@@ -474,6 +481,14 @@ boardPieces.forEach(button => {
             if(clickedPiece === null){
                 return;
             }
+
+            /* 
+                Exit without highlighting if it is not that piece's turn
+            */
+            if(clickedPiece.color !== board.turn){
+                return;
+            }
+
             board.selectedElement = clickedPiece;
             highlightElement(parentElementOfButton, 'yellow');
             validMoves.forEach((square) => {
@@ -493,7 +508,7 @@ boardPieces.forEach(button => {
             board.selectedElement = null;
 
 
-        // Case 3 - An piece is already selected and the user clicked on an empty square
+        // Case 3 - A piece is already selected and the user clicked on an empty square
         }else if(board.squares[squareId] === null){
 
             // Get previously selected button and valid moves of the previous button
@@ -570,6 +585,9 @@ boardPieces.forEach(button => {
                 // console.log(board.squares[squareId]);
 
                 board.selectedElement = null;  // BAK
+
+                // Change the turn - move executed
+                board.changeTurn();
                 return;
 
         }
@@ -589,12 +607,21 @@ boardPieces.forEach(button => {
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
 
+            
+            if(clickedPiece.color !== board.turn && board.selectedElement.color !== board.turn){
+                return;
+            }
+    
+
             if(validMovesOfPrevious.includes(squareId)){
                 
                 highlightElement(parentElementOfButton, null);  // BAK
                 highlightElement(previousParentElement, null);  // BAK
                 board.takePiece(board.selectedElement, clickedPiece);
                 
+                // Change the turn - piece has been taken
+                board.changeTurn();
+
                 highlightElement(previousParentElement, null);
                 validMovesOfPrevious.forEach((square) => {
                     let dstSqaure = document.querySelector('.' + square);
