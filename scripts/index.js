@@ -332,6 +332,8 @@ class Board {
         let dstSquareTableCell = dstSquareList[0];
         let dstSquareButton = dstSquareList[1];
 
+        console.log(dstSquareButton);
+
         let currentSquareList = document.getElementsByClassName(killingSquareId);
         let currentSquareTableCell = currentSquareList[0];
         let currentSquareButton = currentSquareList[1];
@@ -349,7 +351,24 @@ class Board {
             }
         }
 
+        for(let i=0; i < currentSquareTableCell.childNodes.length; i++){
+            if(currentSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE){
+                currentSquareChildToReplace.push(currentSquareTableCell.childNodes[i]);
+            }
+        }
+
         dstSquareTableCell.replaceChild(currentSquareButton, dstSquareChildToReplace[0]);
+        currentSquareTableCell.appendChild(dstSquareButton);
+
+        // Turn the victim piece into an empty button
+        dstSquareButton.removeAttribute("id");
+        dstSquareButton.classList.remove("piece");
+        dstSquareButton.classList.remove(victimSquareId);
+        dstSquareButton.classList.add("empty");
+        dstSquareButton.classList.add(killingSquareId);
+        dstSquareButton.innerHTML = null;
+
+        
         killingPiece.squareId = victimSquareId;
 
         if(victimPiece.color === 'white'){
@@ -369,7 +388,7 @@ class Piece {
         // this.pieceType = pieces.find(piece => piece.name === pieceType);
         this.color = color;
         this.squareId = null;
-        this.moveCount = 0; // Add the move count here
+        this.moveCount = 0; // Add the move count here so each piece keeps its own separate count (mainly for pawns)
     }
 
 }
