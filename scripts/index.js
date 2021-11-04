@@ -263,10 +263,7 @@ class Board {
                 let intermediatePosition = [];
                 intermediatePosition[0] = srcSquareNumeric[0];  // no change
                 intermediatePosition[1] = (piece.color === 'white' ? srcSquareNumeric[1] + 1 : srcSquareNumeric[1] - 1);  // check the square directly in front of the pawn
-                console.log(piece.color === 'white' ? srcSquareNumeric[1] + 1 : srcSquareNumeric[1] - 1);
                 let intermediateSquare = this.getRegularPosition(intermediatePosition);
-                console.log(srcSquareId);
-                console.log(intermediateSquare);
                 if(this.squares[intermediateSquare] !== null){
                     return false;
                 }
@@ -306,6 +303,55 @@ class Board {
         return true;
     }
 
+    /* 
+        Check to see if the king belonging to the input value of color is in check
+    */
+    inCheck(color){
+
+        // If color is white, check all black pieces to see if they can kill the king and vice versa
+
+        // 1. Get the position of the king
+        // 2. For each enemy piece
+        //     - Does the array of valid moves for that piece contain the king's square?
+        //        => Yes - return true
+        //    return false
+
+        let kingSquareId;
+        let enemyPieces = [];
+
+
+        for(const [squareId, piece] of Object.entries(this.squares)){
+
+            if(piece === null){
+                continue;
+            }
+
+            if(piece.color === color && piece.pieceType.name === 'king'){
+                kingSquareId = squareId;
+                continue;
+            }
+
+            if(piece.color !== color){
+                piece.squareId = squareId;
+                enemyPieces.push(piece);
+            }
+        }
+
+        let enemyPiece;
+        let enemyPieceValidMoves;
+
+        for(let i=0; i < enemyPieces.length; i++){
+            enemyPiece = enemyPieces[i];
+            enemyPieceValidMoves = this.getValidMoves(enemyPiece.squareId);
+
+            if(enemyPieceValidMoves.includes(kingSquareId)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     getValidMoves(squareId) {
         let currentPiece = this.squares[squareId];
         let theoreticalMoves = this.theoreticalMoves(squareId, currentPiece);
@@ -326,8 +372,6 @@ class Board {
 
         if(killingPiece.pieceType.name === 'pawn'){
             killingPiece.moveCount++;
-            console.log(killingPiece);
-            // console.log(killingPiece.pieceType.fwdMoves);
         }
 
         // Update squares object to reflect new pieces
@@ -337,8 +381,6 @@ class Board {
         let dstSquareList = document.getElementsByClassName(victimSquareId);
         let dstSquareTableCell = dstSquareList[0];
         let dstSquareButton = dstSquareList[1];
-
-        console.log(dstSquareButton);
 
         let currentSquareList = document.getElementsByClassName(killingSquareId);
         let currentSquareTableCell = currentSquareList[0];
@@ -452,6 +494,8 @@ const board = new Board();
 // Respond to click events on each button
 boardPieces.forEach(button => {
     button.addEventListener('click', (eventObject) => {
+        
+        board.inCheck('white');
 
         /* 
         The selected element field of the board is used to track what 
@@ -459,7 +503,6 @@ boardPieces.forEach(button => {
         */
 
         let squareId = eventObject.target.classList[1];
-        console.log(board.squares[squareId]);
         let clickedPiece = board.getSquares()[squareId];
         if(clickedPiece !== null){
 
@@ -582,7 +625,6 @@ boardPieces.forEach(button => {
                 board.squares[squareId] = board.squares[pieceSquareId];
                 board.squares[pieceSquareId] = null;
 
-                // console.log(board.squares[squareId]);
 
                 board.selectedElement = null;  // BAK
 
