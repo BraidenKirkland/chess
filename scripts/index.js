@@ -33,10 +33,8 @@ const rook = {
 }
 
 const pawn = {
-    get fwdMoves() { return this.moveCount === 0 ? [[0, 2], [0, 1]] : [[0, 1]] },
     killMoves: [[-1, 1], [1, 1]],
     name: 'pawn',
-    moveCount: 0
 }
 
 const pawnFwdMoves = (moveCount) => {
@@ -71,7 +69,7 @@ class Board {
     }
 
     /* 
-        Function to initially sign a null value to 
+        Function to initially assign a null value to 
         every square on the board.
     */
     createSquares(){
@@ -156,9 +154,10 @@ class Board {
         }
 
         if(isPawn){
-            let fwdMoves = piece.pieceType.fwdMoves;
+            let fwdMoves = pawnFwdMoves(piece.moveCount);
             let killMoves = piece.pieceType.killMoves;
             for(let i=0; i < fwdMoves.length; i++){
+                // Reverse direction for black pieces
                 newPosition[0] = startingPosition[0] + (piece.color === 'white' ? fwdMoves[i][0] : -1 * fwdMoves[i][0]);
                 newPosition[1] = startingPosition[1] + (piece.color === 'white' ? fwdMoves[i][1] : -1 * fwdMoves[i][1]);
 
@@ -173,6 +172,7 @@ class Board {
             }   
 
             for(let i=0; i < killMoves.length; i++){
+                // Reverse direction for black pieces
                 newPosition[0] = startingPosition[0] + (piece.color === 'white' ? killMoves[i][0] : -1 * killMoves[i][0]);
                 newPosition[1] = startingPosition[1] + (piece.color === 'white' ? killMoves[i][1] : -1 * killMoves[i][1]);
                 // Make sure the calculated position is on the board
@@ -193,7 +193,7 @@ class Board {
     validMove(srcSquareId, dstSquareId, piece){
 
         // Cannot move to the square if it is occupied by a same color piece
-        if(this.squares[dstSquareId] != null && this.squares[dstSquareId].color === piece.color){
+        if(this.squares[dstSquareId] !== null && this.squares[dstSquareId].color === piece.color){
             return false;
         }
 
@@ -252,6 +252,20 @@ class Board {
             if(this.squares[dstSquare] !== null){
                 return false;
             }
+
+            if(Math.abs(vertical) > 1){
+                let intermediatePosition = [];
+                intermediatePosition[0] = srcSquareNumeric[0];  // no change
+                intermediatePosition[1] = (piece.color === 'white' ? srcSquareNumeric[1] + 1 : srcSquareNumeric[1] - 1);  // check the square directly in front of the pawn
+                console.log(piece.color === 'white' ? srcSquareNumeric[1] + 1 : srcSquareNumeric[1] - 1);
+                let intermediateSquare = this.getRegularPosition(intermediatePosition);
+                console.log(srcSquareId);
+                console.log(intermediateSquare);
+                if(this.squares[intermediateSquare] !== null){
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -305,7 +319,7 @@ class Board {
         let killingSquareId = killingPiece.squareId.slice();
 
         if(killingPiece.pieceType.name === 'pawn'){
-            killingPiece.pieceType.moveCount++;
+            killingPiece.moveCount++;
             console.log(killingPiece);
             // console.log(killingPiece.pieceType.fwdMoves);
         }
@@ -355,6 +369,7 @@ class Piece {
         // this.pieceType = pieces.find(piece => piece.name === pieceType);
         this.color = color;
         this.squareId = null;
+        this.moveCount = 0; // Add the move count here
     }
 
 }
@@ -465,6 +480,10 @@ boardPieces.forEach(button => {
             // Get previously selected button and valid moves of the previous button
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
+
+            if(board.selectedElement.pieceType.name === 'pawn'){
+                board.selectedElement.moveCount++;
+            }
 
             if(validMovesOfPrevious.includes(squareId)){
                 
