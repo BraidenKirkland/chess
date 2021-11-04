@@ -39,6 +39,14 @@ const pawn = {
     moveCount: 0
 }
 
+const pawnFwdMoves = (moveCount) => {
+    if(moveCount > 0){
+        return [[0, 1]];
+    }
+
+    return [[0, 2], [0, 1]];
+};
+
 let pieces = [king, queen, bishop, knight, rook, pawn];
 
 class Board {
@@ -296,6 +304,12 @@ class Board {
         let victimSquareId = victimPiece.squareId.slice();
         let killingSquareId = killingPiece.squareId.slice();
 
+        if(killingPiece.pieceType.name === 'pawn'){
+            killingPiece.pieceType.moveCount++;
+            console.log(killingPiece);
+            // console.log(killingPiece.pieceType.fwdMoves);
+        }
+
         // Update squares object to reflect new pieces
         this.squares[victimSquareId] = killingPiece;
         this.squares[killingSquareId] = null;
@@ -312,8 +326,16 @@ class Board {
         currentSquareButton.classList.remove(killingSquareId)
         currentSquareButton.classList.add(victimSquareId);
 
-        // TODO: Update id of the button to containing the killing piece
-        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareTableCell.childNodes[1]);
+        let dstSquareChildToReplace = [];
+        let currentSquareChildToReplace = [];
+
+        for(let i=0; i < dstSquareTableCell.childNodes.length; i++){
+            if(dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE){
+                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
+            }
+        }
+
+        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareChildToReplace[0]);
         killingPiece.squareId = victimSquareId;
 
         if(victimPiece.color === 'white'){
@@ -328,7 +350,9 @@ class Board {
 class Piece {
 
     constructor(pieceType, color) {
-        this.pieceType = pieces.find(piece => piece.name === pieceType);
+        // Make a deep copy of each piece - important for determining available moves for pawns
+        this.pieceType = Object.assign({}, pieces.find(piece => piece.name === pieceType));
+        // this.pieceType = pieces.find(piece => piece.name === pieceType);
         this.color = color;
         this.squareId = null;
     }
