@@ -67,7 +67,6 @@ class Board {
 
     changeTurn(){
         this.turn = (this.turn === 'white' ? 'black' : 'white');
-        console.log("The turn belongs to " + this.turn);
     }
 
     getSquares(){
@@ -319,7 +318,6 @@ class Board {
         let kingSquareId;
         let enemyPieces = [];
 
-
         for(const [squareId, piece] of Object.entries(this.squares)){
 
             if(piece === null){
@@ -354,9 +352,57 @@ class Board {
 
     /* 
         Check if 'color' has been checkmated
+
+        Assumption is that the king is already in check
     */
     isCheckMate(color){
 
+        /* 
+           For every piece of this color
+                1. Get the valid moves for that piece
+                    For each move in valid moves
+                        if(moveRemovesCheck(piece, move)) 
+                            return false  -> check was removed
+                
+                2. return true -> none of the valid moves for any piece removes the check; therefore, checkmate
+        */
+
+        // Adding this as assurance
+        if(!this.inCheck(color)){
+            return false;
+        }
+
+        let friendlyPieces = [];
+
+        for(const [squareId, piece] of Object.entries(this.squares)){
+
+            if(piece !== null && piece.color === color){
+                piece.squareId = squareId;
+                friendlyPieces.push(piece)
+            }
+        }
+
+        let currentPiece;
+        let move;
+
+        // Iterate through all pieces of this color
+        for(let i=0; i < friendlyPieces.length; i++){
+            currentPiece = friendlyPieces[i];
+            // For each piece, get its valid moves
+            let validMoves = this.getValidMoves(currentPiece.squareId.slice());
+
+            // Iterate through all valid moves for each piece
+            for(let j=0; j < validMoves.length; j++){
+                move = validMoves[j];
+                // Check whether moving this piece to one of its valid moves will remove the check on the king
+                if(this.moveRemovesCheck(currentPiece, move)){
+                    return false;
+                }
+            }
+        }
+
+        // If this far, then it must be a checkmate
+        return true;
     }
 
     /* 
@@ -365,10 +411,77 @@ class Board {
 
     isStaleMate(color){
 
+    /*
+
+        
+    */
+
+        // Cannot be a stalemate if the piece is already in check
+        if(this.inCheck(color)){
+            return false;
+        }
+
+        let friendlyPieces = [];
+
+        for(const [squareId, piece] of Object.entries(this.squares)){
+
+            if(piece !== null && piece.color === color){
+                piece.squareId = squareId;
+                friendlyPieces.push(piece)
+            }
+        }
+
+        let currentPiece;
+        let move;
+
+        // Iterate through all pieces of this color
+        for(let i=0; i < friendlyPieces.length; i++){
+            currentPiece = friendlyPieces[i];
+
+            // For each piece, get its valid moves
+            let validMoves = this.getValidMoves(currentPiece.squareId.slice());
+
+            // Iterate through all valid moves for each piece
+            for(let j=0; j < validMoves.length; j++){
+                move = validMoves[j];
+                // Check whether moving this piece to one of its valid moves will create a check on the king
+                if(!this.moveCreatesCheck(currentPiece, move)){
+
+                    // If there exists a valid move for a piece of this color that does not result in check => no stalemate
+                    return false;
+                }
+            }
+        }
+
+        // No valid moves except those that create check
+        return true;
     }
 
+    // TODO: Queenside vs Kingside
     castle(rook, king){
 
+        if(rook.color !== king.color){
+            return;
+        }
+
+        // Castling is only allowed if neither the rook nor the king have moved
+        if(rook.moveCount !== 0 || king.moveCount !== 0){
+            return;
+        }
+
+        /* 
+            The rook can be under attack before or after the move, but the king cannot be 
+            under attack before, during, or after the move
+        */
+
+        // TODO: Ensure all squares in between rook and king are empty
+
+        // TODO: Ensure the king is not currently in check - not allowed to castle in this case
+
+        // TODO: Ensure that any intermediate squares are also not under attack
+
+        // TODO: Ensure the destination square for the king is not under attack
+        // It does not matter if the rook's square is under attack
     }
 
     /* 
@@ -410,6 +523,9 @@ class Board {
         // record the squareId of the piece
         let currentPosition = pieceToMove.squareId;
 
+        console.log(`The piece being moved is ${pieceToMove.pieceType.name} its current position is ${currentPosition}`);
+        console.log(`The new position proposed is: ${newPosition}`);
+
         // temporarily remove the piece from the board
         this.squares[currentPosition] = null;
 
@@ -419,8 +535,9 @@ class Board {
         // Replace it with the piece that is being moved
         if(newPosition !== null  && this.squares[newPosition] !== null){
             piecePresentlyInNewPosition = this.squares[newPosition];
-            this.squares[newPosition] = pieceToMove;
         }
+
+        this.squares[newPosition] = pieceToMove;
        
         // Check if this board arrangement results in a check
         retVal = this.inCheck(pieceToMove.color);
@@ -583,6 +700,16 @@ boardPieces.forEach(button => {
     button.addEventListener('click', (eventObject) => {
         
         board.inCheck('white');
+
+        if(board.isCheckMate(board.turn)){
+            console.log(`${board.turn} has been CHECKMATED!`);
+            return;
+        }
+
+        if(board.isStaleMate(board.turn)){
+            console.log('STALEMATE');
+            return;
+        }
 
         /* 
         The selected element field of the board is used to track what 
