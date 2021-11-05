@@ -352,6 +352,86 @@ class Board {
         return false;
     }
 
+    /* 
+        Check if 'color' has been checkmated
+    */
+    isCheckMate(color){
+
+    }
+
+    /* 
+        Check if 'color' has been stalemated
+    */
+
+    isStaleMate(color){
+
+    }
+
+    castle(rook, king){
+
+    }
+
+    /* 
+    The king is already in check
+    Does moving pieceToMove to newPosition remove the check on the king?
+    */
+    moveRemovesCheck(pieceToMove, newPosition){
+
+        let currentPositionOfPiece = pieceToMove.squareId;
+        let piecePresentlyInNewPosition = this.squares[newPosition];
+
+        // Alter the board temporarily
+        this.squares[currentPositionOfPiece] = null;
+        this.squares[newPosition] = pieceToMove;
+
+        // Perform the swap and run the inCheck function
+        let retVal = !this.inCheck(pieceToMove.color);
+
+        // Set the board back to its original state
+        this.squares[newPosition] = piecePresentlyInNewPosition;
+        this.squares[currentPositionOfPiece] = pieceToMove;
+
+
+        return retVal;
+    }
+
+    /* 
+    Check if moving the input piece would result in a check on its color's king
+    TODO: The method is currently oversimplified. Need to consider where the piece is going 
+          to be moved to because it may kill the piece causing the check
+          **** maybe moveRemovesCheck() can handle this ???? ****
+
+        ASSUMES THAT THE MOVE IS VALID
+    */
+    moveCreatesCheck(pieceToMove, newPosition = null){
+
+        let retVal = false;
+
+        // record the squareId of the piece
+        let currentPosition = pieceToMove.squareId;
+
+        // temporarily remove the piece from the board
+        this.squares[currentPosition] = null;
+
+        let piecePresentlyInNewPosition = null;
+
+        // When a piece currently occupies the new position
+        // Replace it with the piece that is being moved
+        if(newPosition !== null  && this.squares[newPosition] !== null){
+            piecePresentlyInNewPosition = this.squares[newPosition];
+            this.squares[newPosition] = pieceToMove;
+        }
+       
+        // Check if this board arrangement results in a check
+        retVal = this.inCheck(pieceToMove.color);
+
+        // Reset the board
+        this.squares[currentPosition] = pieceToMove;
+        this.squares[newPosition] = piecePresentlyInNewPosition;
+
+        return retVal;  
+    }
+
     getValidMoves(squareId) {
         let currentPiece = this.squares[squareId];
         let theoreticalMoves = this.theoreticalMoves(squareId, currentPiece);
@@ -365,10 +445,17 @@ class Board {
     TODO: Remove old highlight from the piece that was killed
     */
     takePiece(killingPiece, victimPiece){
+
+
         
         // Get the current square id of each piece
         let victimSquareId = victimPiece.squareId.slice();
         let killingSquareId = killingPiece.squareId.slice();
+
+        if(this.moveCreatesCheck(killingPiece, victimSquareId)){
+            console.log("Cannot take piece. This moves puts your king into check");
+            return;
+        }
 
         if(killingPiece.pieceType.name === 'pawn'){
             killingPiece.moveCount++;
@@ -557,6 +644,19 @@ boardPieces.forEach(button => {
             // Get previously selected button and valid moves of the previous button
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
+
+            // Check if currently in check and the move does not remove check
+            if(board.inCheck(board.selectedElement.color) && !board.moveRemovesCheck(board.selectedElement, squareId)){
+                console.log("You cannot complete this move because it does not remove the check");
+                return;
+            }
+            
+            // Check if moving piece creates check on king
+            // TODO: Make sure turns are maintained
+            if(!board.inCheck(board.selectedElement.color) && board.moveCreatesCheck(board.selectedElement, squareId)){
+                console.log("Cannot move piece to empty square. This moves puts your king into check");
+                return;
+            }
 
             if(board.selectedElement.pieceType.name === 'pawn'){
                 board.selectedElement.moveCount++;
