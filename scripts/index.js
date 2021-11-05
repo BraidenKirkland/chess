@@ -410,12 +410,6 @@ class Board {
     */
 
     isStaleMate(color){
-
-    /*
-
-        
-    */
-
         // Cannot be a stalemate if the piece is already in check
         if(this.inCheck(color)){
             return false;
@@ -474,14 +468,81 @@ class Board {
             under attack before, during, or after the move
         */
 
-        // TODO: Ensure all squares in between rook and king are empty
-
         // TODO: Ensure the king is not currently in check - not allowed to castle in this case
+        if(this.inCheck(king.color)){
+            console.log(`Castle not allowed: ${king.color} king in check!`);
+            return;
+        }
+
+        
+        let rookNumericPosition = [Number(this.getNumericPosition(rook.squareId)[0]), Number(this.getNumericPosition(rook.squareId)[1])];
+        let kingNumericPosition = [Number(this.getNumericPosition(king.squareId)[0]), Number(this.getNumericPosition(king.squareId)[1])];
+
+        let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
+
+        let kingSide = true;
+        let kingMovementUnits = 2;
+        let rookUnitsRelativeToKing = -1; // One unit to king's left if kingside
+
+        if(horizontalOffset > 0){
+            kingSide = false;
+            kingMovementUnits = -2;
+            rookUnitsRelativeToKing = 1;  // One unit to king's right if queenside
+        }
+
+
+
+        // TODO: Ensure all squares inbetween rook and king are empty
+
+        
 
         // TODO: Ensure that any intermediate squares are also not under attack
-
         // TODO: Ensure the destination square for the king is not under attack
+
+
+        // If at this point, assume all of the conditions for legal castling have been passed
+        kingNumericPosition[0] += kingMovementUnits;
+        rookNumericPosition[0] = kingNumericPosition[0] + rookUnitsRelativeToKing;
+
+        let newKingPosition = this.getRegularPosition(kingNumericPosition);
+        let newRookPosition = this.getRegularPosition(rookNumericPosition);
+
+        this.movePiece(king, newKingPosition);
+        this.movePiece(rook, newRookPosition);
+
+        
+
+
         // It does not matter if the rook's square is under attack
+    }
+
+    movePiece(pieceToMove, newPosition){
+
+        let squareIdofPiece = pieceToMove.squareId;
+
+        // Get table cell (<td>) and button elements for destination (empty) square
+        let dstSquareTableCell = document.getElementsByClassName(newPosition)[0];
+        let dstSquareButton = document.getElementsByClassName(newPosition)[1];
+
+            // Get table cell (<td>) and button elements for piece square
+        let pieceSquareTableCell = document.getElementsByClassName(squareIdofPiece)[0];
+        let pieceSquareButton = document.getElementsByClassName(squareIdofPiece)[1];
+
+        // Need to replace the children of the table cells
+
+        let dstSquareChildToReplace = [];
+        let pieceSquareChildToReplace = [];
+
+        for(let i=0; i < dstSquareTableCell.childNodes.length; i++){
+            if(dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE){
+                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
+            }
+        }
+
+        // Replace the empty square's button with the piece's button
+        dstSquareTableCell.replaceChild(pieceSquareButton, dstSquareChildToReplace[0]);
+        pieceSquareTableCell.appendChild(dstSquareButton);
+        
     }
 
     /* 
