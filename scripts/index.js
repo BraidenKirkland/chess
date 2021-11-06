@@ -451,12 +451,33 @@ class Board {
         return true;
     }
 
-    // TODO: Queenside vs Kingside
+    squareUnderAttack(squareId, opposingColor){
+
+        // TODO: Check the rules to see what to do if the opposing side is in check
+        let validMoves;
+        for(const [square, piece] of Object.entries(this.squares)){
+            if(piece !== null && piece.color === opposingColor){
+                validMoves = this.getValidMoves(square);
+                // TODO: May need a special check for pawns trying to move forward as they are not "attacking"
+                //       However, they will be able to attack both diagonals
+                if(validMoves.includes(squareId)){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // TODO: Need to remove highlighting after castling
     castle(rook, king){
 
+        
         if(rook.color !== king.color){
             return;
         }
+
+        let opposingColor = (king.color === 'white' ? 'black' : 'white');
 
         // Castling is only allowed if neither the rook nor the king have moved
         if(rook.moveCount !== 0 || king.moveCount !== 0){
@@ -477,43 +498,66 @@ class Board {
         
         let rookNumericPosition = [Number(this.getNumericPosition(rook.squareId)[0]), Number(this.getNumericPosition(rook.squareId)[1])];
         let kingNumericPosition = [Number(this.getNumericPosition(king.squareId)[0]), Number(this.getNumericPosition(king.squareId)[1])];
+        console.log(rookNumericPosition);
+        console.log(kingNumericPosition);
+
 
         let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
+        console.log(horizontalOffset);
+     
 
-        let kingSide = true;
+        // Initially assume kingside, then double check offset to confirm
         let kingMovementUnits = 2;
         let rookUnitsRelativeToKing = -1; // One unit to king's left if kingside
+        let counter = -1;
 
+        // If offset is positive, then we are castling kingside
         if(horizontalOffset > 0){
-            kingSide = false;
             kingMovementUnits = -2;
             rookUnitsRelativeToKing = 1;  // One unit to king's right if queenside
+            counter = 1;
         }
 
-
-
-        // TODO: Ensure all squares inbetween rook and king are empty
-
         
+        let intermediatePositionNumeric = [];
+        let intermediatePosition;
+        // TODO: Have a closer look at the terminating condition to ensure no infinite loop
+        for(let i=rookNumericPosition[0] + counter; i !== kingNumericPosition[0]; i += counter){
+            
+            intermediatePositionNumeric[0] = i;
+            // No change in vertical offset
+            intermediatePositionNumeric[1] = rookNumericPosition[1];
 
-        // TODO: Ensure that any intermediate squares are also not under attack
-        // TODO: Ensure the destination square for the king is not under attack
+            intermediatePosition = this.getRegularPosition(intermediatePositionNumeric);
+            console.log(intermediatePosition);
 
+            // Ensure all squares inbetween rook and king are empty
+            if(this.squares[intermediatePosition] !== null){
+                return;
+            }
 
-        // If at this point, assume all of the conditions for legal castling have been passed
+            // Ensure that any intermediate squares are also not under attack
+            if(this.squareUnderAttack(intermediatePosition, opposingColor)){
+                return;
+            }
+        }
+        
         kingNumericPosition[0] += kingMovementUnits;
         rookNumericPosition[0] = kingNumericPosition[0] + rookUnitsRelativeToKing;
 
         let newKingPosition = this.getRegularPosition(kingNumericPosition);
         let newRookPosition = this.getRegularPosition(rookNumericPosition);
 
+        // TODO: Ensure the destination square for the king is not under attack
+        if(this.squareUnderAttack(newKingPosition, opposingColor)){
+            return;
+        }
+
+        // If at this point, assume all of the conditions for legal castling have been passed
         this.movePiece(king, newKingPosition);
         this.movePiece(rook, newRookPosition);
 
-        
-
-
-        // It does not matter if the rook's square is under attack
+        // It does not matter if the rook's destination square is under attack
     }
 
     movePiece(pieceToMove, newPosition){
@@ -543,7 +587,10 @@ class Board {
         dstSquareTableCell.replaceChild(pieceSquareButton, dstSquareChildToReplace[0]);
         pieceSquareTableCell.appendChild(dstSquareButton);
         
+        pieceToMove.moveCount++;
+        this.changeTurn();
     }
+
 
     /* 
     The king is already in check
@@ -583,9 +630,6 @@ class Board {
 
         // record the squareId of the piece
         let currentPosition = pieceToMove.squareId;
-
-        console.log(`The piece being moved is ${pieceToMove.pieceType.name} its current position is ${currentPosition}`);
-        console.log(`The new position proposed is: ${newPosition}`);
 
         // temporarily remove the piece from the board
         this.squares[currentPosition] = null;
@@ -937,11 +981,27 @@ boardPieces.forEach(button => {
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
 
-            
+            // TODO: Look into this - it may be a source of issues
             if(clickedPiece.color !== board.turn && board.selectedElement.color !== board.turn){
                 return;
             }
     
+            let clickedPieceName = clickedPiece.pieceType.name;
+            let previousPieceName = board.selectedElement.pieceType.name;
+            let castlingPieces = ['rook', 'king'];
+
+            if(castlingPieces.includes(clickedPieceName) && castlingPieces.includes(previousPieceName)){
+                if(previousPieceName !== clickedPieceName){
+
+                    if(previousPieceName === 'rook'){
+                        board.castle(board.selectedElement, clickedPiece);
+                    }else{
+                        board.castle(clickedPiece, board.selectedElement);
+                    }
+                }
+
+                return;
+            }
 
             if(validMovesOfPrevious.includes(squareId)){
                 
