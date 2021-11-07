@@ -845,6 +845,17 @@ class Board {
             killingPiece.ranksAdvanced++;
         }
     }
+
+    promotionPossible(pawn){
+
+        return pawn.ranksAdvanced === 6;
+    }
+
+    promotePawn(pawn){
+
+
+        
+    }
 }
 
 class Piece {
