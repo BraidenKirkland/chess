@@ -245,12 +245,18 @@ class Board {
             If the move has a horizontal component, then it must be a kill move.
             This is only allowed if the destination square is occupied by an enemy piece
          */
+
+        // TODO: Possible check en Passant here??
         if(piece.pieceType.name === 'pawn' && horizontal !== 0){
             let dstSquare = this.getRegularPosition(dstSquareIdNumeric);
             // The move is not allowd if the destination square has no piece or a piece of the same color
-            if(this.squares[dstSquare] === null || this.squares[dstSquare].color === piece.color){
+
+            if(this.squares[dstSquare] === null && this.enPassantAllowed(piece, dstSquare)){
+                return true;
+            }else if(this.squares[dstSquare] === null || this.squares[dstSquare].color === piece.color){
                 return false;
             }
+
             return true;
         }
 
@@ -555,6 +561,68 @@ class Board {
         this.changeTurn();
 
         // It does not matter if the rook's destination square is under attack
+    }
+
+    // 
+    enPassantAllowed(takingPawn, diagonalSquare){
+
+        let neighborSquare;
+        if(takingPawn.color === 'white'){
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
+        }else{
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
+        }
+
+        // Ensure there is an enempy pawn directly beside 
+        let pieceOnNeighborSquare = this.squares[neighborSquare];
+        if(pieceOnNeighborSquare === null || pieceOnNeighborSquare.pieceType.name !== 'pawn' || pieceOnNeighborSquare.color === takingPawn.color){
+            return false;
+        }
+
+        // Ensure the destination square is free
+        if(this.squares[diagonalSquare] !== null){
+            return false;
+        }
+        
+        // Rule One: The capturing pawn much have moved exactly three ranks
+        if(takingPawn.ranksAdvanced !== 3){
+            return false;
+        }
+
+        // Rule Two: The captured pawn must have moved two squares in one move
+        if(pieceOnNeighborSquare.firstMoveRank !== 2 && pieceOnNeighborSquare.moveCount !== 1){
+            return false;
+        }
+
+        // Rule Three: The captured pawn must have made the last move
+        if(this.numMovesMade !== pieceOnNeighborSquare.numberOfMostRecentMove){
+            return false;
+        }
+
+        return true;
+    }
+
+    enPassantTake(takingPawn, diagonalSquare){
+
+        let neighborSquare;
+        if(takingPawn.color === 'white'){
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
+        }else{
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
+        }
+
+        this.movePieceToEmpty(takingPawn, diagonalSquare);
+
+        // Get <td> and <button> of pawn to be removed
+        let takenTableCell = document.getElementsByClassName(neighborSquare)[0];
+        let takenButton = document.getElementsByClassName(neighborSquare)[1];
+
+        takenButton.classList.add("empty");
+        takenButton.classList.remove("piece");
+        takenButton.removeAttribute("id");
+        takenButton.innerHTML = null;
+
+        this.squares[neighborSquare] = null;
     }
 
     movePieceToEmpty(pieceToMove, newPosition, castling=false){
@@ -941,6 +1009,7 @@ boardPieces.forEach(button => {
         // Case 3 - A piece is already selected and the user clicked on an empty square
         }else if(board.squares[squareId] === null){
 
+
             // Get previously selected button and valid moves of the previous button
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
@@ -958,6 +1027,8 @@ boardPieces.forEach(button => {
                 return;
             }
 
+            // TODO: Possible check en Passant here??
+
             // If the move is valid, remove highlighting
             if(validMovesOfPrevious.includes(squareId)){  
                 highlightElement(parentElementOfButton, null);  // BAK  
@@ -966,7 +1037,14 @@ boardPieces.forEach(button => {
             }
 
             // Move the piece to the empty square
-            board.movePieceToEmpty(board.selectedElement, squareId);
+
+            // Perform en Passant if it is allowed
+            if(board.enPassantAllowed(board.selectedElement, squareId)){
+                board.enPassantTake(board.selectedElement, squareId);
+            }else{
+                board.movePieceToEmpty(board.selectedElement, squareId);
+            }
+
 
             return;
 
