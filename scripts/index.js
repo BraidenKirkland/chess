@@ -475,7 +475,6 @@ class Board {
     // TODO: Need to remove highlighting after castling
     castle(rook, king){
 
-        
         if(rook.color !== king.color){
             return;
         }
@@ -498,17 +497,11 @@ class Board {
             return;
         }
 
-        
         let rookNumericPosition = [Number(this.getNumericPosition(rook.squareId)[0]), Number(this.getNumericPosition(rook.squareId)[1])];
         let kingNumericPosition = [Number(this.getNumericPosition(king.squareId)[0]), Number(this.getNumericPosition(king.squareId)[1])];
-        console.log(rookNumericPosition);
-        console.log(kingNumericPosition);
-
 
         let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
-        console.log(horizontalOffset);
      
-
         // Initially assume kingside, then double check offset to confirm
         let kingMovementUnits = 2;
         let rookUnitsRelativeToKing = -1; // One unit to king's left if kingside
@@ -530,9 +523,7 @@ class Board {
             intermediatePositionNumeric[0] = i;
             // No change in vertical offset
             intermediatePositionNumeric[1] = rookNumericPosition[1];
-
             intermediatePosition = this.getRegularPosition(intermediatePositionNumeric);
-            console.log(intermediatePosition);
 
             // Ensure all squares inbetween rook and king are empty
             if(this.squares[intermediatePosition] !== null){
@@ -544,7 +535,7 @@ class Board {
                 return;
             }
         }
-        
+
         kingNumericPosition[0] += kingMovementUnits;
         rookNumericPosition[0] = kingNumericPosition[0] + rookUnitsRelativeToKing;
 
@@ -557,13 +548,16 @@ class Board {
         }
 
         // If at this point, assume all of the conditions for legal castling have been passed
-        this.movePieceToEmpty(king, newKingPosition);
-        this.movePieceToEmpty(rook, newRookPosition);
+        this.movePieceToEmpty(king, newKingPosition, true);
+        this.movePieceToEmpty(rook, newRookPosition, true);
+
+        // Need this here because otherwise it would result in the wrong turn
+        this.changeTurn();
 
         // It does not matter if the rook's destination square is under attack
     }
 
-    movePieceToEmpty(pieceToMove, newPosition){
+    movePieceToEmpty(pieceToMove, newPosition, castling=false){
 
         // Make a copy using slice()
         let squareIdofPiece = pieceToMove.squareId.slice();
@@ -573,7 +567,7 @@ class Board {
 
         console.log(validMoves);
 
-        if(!validMoves.includes(newPosition)){
+        if(!validMoves.includes(newPosition) && !castling){
             console.log("Returning");
             return;
         }
@@ -617,7 +611,16 @@ class Board {
         board.selectedElement = null;
         
         pieceToMove.moveCount++;
-        console.log(pieceToMove.moveCount);
+        this.numMovesMade++;
+        pieceToMove.numberOfMostRecentMove = this.numMovesMade;
+
+        // TODO: Need to determine if the pawn moved two squares forward or one square forward
+        if(pieceToMove.pieceType.name === 'pawn'){
+
+            let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
+            pieceToMove.ranksAdvanced += verticalDistance;
+        }
+
         this.changeTurn();
     }
 
@@ -699,7 +702,7 @@ class Board {
     takePiece(killingPiece, victimPiece){
 
 
-        
+        console.log("HERE!!!!!!!!!");
         // Get the current square id of each piece
         let victimSquareId = victimPiece.squareId.slice();
         let killingSquareId = killingPiece.squareId.slice();
@@ -764,6 +767,15 @@ class Board {
         }
 
         this.blackPiecesKilled.push(victimPiece);
+
+        this.numMovesMade++;
+        killingPiece.numberOfMostRecentMove = this.numMovesMade;
+        killingPiece.killCount++;
+        killingPiece.moveCount++;
+
+        if(killingPiece.pieceType.name === 'pawn'){
+            killingPiece.ranksAdvanced++;
+        }
     }
 }
 
@@ -786,6 +798,8 @@ class Piece {
         // For en passant, this number must be exactly three for the capturing pawn
         // If this number === 6 for pawns, they can be promoted
         this.ranksAdvanced = 0;
+
+        this.killCount = 0;
     }
 
 }
@@ -860,7 +874,6 @@ const board = new Board();
 boardPieces.forEach(button => {
     button.addEventListener('click', (eventObject) => {
         
-        board.inCheck('white');
 
         if(board.isCheckMate(board.turn)){
             console.log(`${board.turn} has been CHECKMATED!`);
@@ -872,49 +885,53 @@ boardPieces.forEach(button => {
             return;
         }
 
-        /* 
-        The selected element field of the board is used to track what 
-        piece was clicked.
-        */
-
+        // Get ID of the clicked square
         let squareId = eventObject.target.classList[1];
+
+        // Determine if the square clicked contains a piece
         let clickedPiece = board.getSquares()[squareId];
         if(clickedPiece !== null){
-
             clickedPiece.squareId = squareId;
         }
+
+        // This is the <td> which is the parent of the button that was clicked
         let parentElementOfButton = document.querySelector("." + squareId);
 
         // Need to get valid moves of previous (if there was a previous)
 
+        // Get validMoves of the clicked piece, if it was a piece
         let validMoves;
         if(clickedPiece !== null){
             validMoves = board.getValidMoves(squareId);
         }else{
             validMoves = [];
         }
+      
         
         // Case 1 - No element currently selected
         if(board.selectedElement === null){
+
+            // No element was currently selected and an empty square was clicked on
             if(clickedPiece === null){
                 return;
             }
 
-            /* 
-                Exit without highlighting if it is not that piece's turn
-            */
+            // Exit without highlighting if it is not that piece's turn
             if(clickedPiece.color !== board.turn){
                 return;
             }
 
+            // Store the piece that was clicked on (to be used next click)
             board.selectedElement = clickedPiece;
 
-            highlightElement(parentElementOfButton, 'yellow');
+            // Highlight square of clicked piece and its valid moves
+            highlightElement(parentElementOfButton, 'pink');
             addHighlightToElements(validMoves);
 
-        // Case 2 - Clicked on the element already selected
+        // Case 2 - User clicked on the element already selected
         }else if(squareId === board.selectedElement.squareId){
 
+            // Remove highlighting
             highlightElement(parentElementOfButton, null);
             removeHighlightFromElements(validMoves);
 
@@ -928,7 +945,7 @@ boardPieces.forEach(button => {
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
 
-            // Check if currently in check and the move does not remove check
+            // Check if currently in check and if the move does not remove check
             if(board.inCheck(board.selectedElement.color) && !board.moveRemovesCheck(board.selectedElement, squareId)){
                 console.log("You cannot complete this move because it does not remove the check");
                 return;
@@ -941,19 +958,20 @@ boardPieces.forEach(button => {
                 return;
             }
 
-            if(validMovesOfPrevious.includes(squareId)){
-                
-                highlightElement(parentElementOfButton, null);  // BAK
-                
+            // If the move is valid, remove highlighting
+            if(validMovesOfPrevious.includes(squareId)){  
+                highlightElement(parentElementOfButton, null);  // BAK  
                 highlightElement(previousParentElement, null);
                 removeHighlightFromElements(validMovesOfPrevious);
             }
 
+            // Move the piece to the empty square
             board.movePieceToEmpty(board.selectedElement, squareId);
 
             return;
 
         }
+
         // Case 4 - An element is already selected and the user clicked on a different element
         else{
 
@@ -962,32 +980,34 @@ boardPieces.forEach(button => {
                 If the move is valid
                     - move the piece there
                     - remove the highlighting
-
-                How to check if empty squares are clicked? Maybe make them into buttons?
-                  If buttons, how to identify them?
             */
-
             let previousParentElement = document.querySelector("." + board.selectedElement.squareId);
+
+            // Get the valid moves of the previously clicked element
             let validMovesOfPrevious = board.getValidMoves(board.selectedElement.squareId);
 
-            // TODO: Look into this - it may be a source of issues
-            if(clickedPiece.color !== board.turn && board.selectedElement.color !== board.turn){
+            // TODO: Possibly remove this?? -> not sure if this condition is even possible
+            if(board.selectedElement.color !== board.turn){
                 return;
             }
     
+            // Check if the user indicated they wanted to castle and if so perform the castle
+            
             let clickedPieceName = clickedPiece.pieceType.name;
             let previousPieceName = board.selectedElement.pieceType.name;
             let castlingPieces = ['rook', 'king'];
-
             if(castlingPieces.includes(clickedPieceName) && castlingPieces.includes(previousPieceName)){
                 if(previousPieceName !== clickedPieceName){
-
                     if(previousPieceName === 'rook'){
                         board.castle(board.selectedElement, clickedPiece);
                     }else{
                         board.castle(clickedPiece, board.selectedElement);
                     }
                 }
+
+                // Remove highlighting
+                highlightElement(previousParentElement, null);
+                removeHighlightFromElements(validMovesOfPrevious);
 
                 return;
             }
@@ -1008,6 +1028,11 @@ boardPieces.forEach(button => {
                 return;
             }
 
+            // Clicked on the opposing color's piece that is not in a position to be taken
+            if(clickedPiece.color !== board.turn){
+                return;
+            }
+
             // Remove highlighting from the previously clicked element and its valid move squares
             highlightElement(previousParentElement, null);
             removeHighlightFromElements(validMovesOfPrevious);
@@ -1018,7 +1043,7 @@ boardPieces.forEach(button => {
             }
 
             board.selectedElement = clickedPiece;
-            
+
             highlightElement(parentElementOfButton, 'yellow');
             addHighlightToElements(validMoves);
         }
