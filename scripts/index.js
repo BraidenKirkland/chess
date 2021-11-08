@@ -687,7 +687,15 @@ class Board {
 
             let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
             pieceToMove.ranksAdvanced += verticalDistance;
+
+            if(this.promotionPossible(pieceToMove)){
+                this.promotePawn(pieceToMove);
+            }
+
         }
+
+        // TODO: Check for pawn promotion
+        
 
         this.changeTurn();
     }
@@ -831,10 +839,9 @@ class Board {
 
         if(victimPiece.color === 'white'){
             this.whitePiecesKilled.push(victimPiece)
-            return;
+        }else{
+            this.blackPiecesKilled.push(victimPiece);
         }
-
-        this.blackPiecesKilled.push(victimPiece);
 
         this.numMovesMade++;
         killingPiece.numberOfMostRecentMove = this.numMovesMade;
@@ -843,7 +850,16 @@ class Board {
 
         if(killingPiece.pieceType.name === 'pawn'){
             killingPiece.ranksAdvanced++;
+
+            if(this.promotionPossible(killingPiece)){
+                this.promotePawn(killingPiece);
+            }
+
         }
+
+        // TODO: Check for pawn promotion
+
+
     }
 
     promotionPossible(pawn){
@@ -853,8 +869,17 @@ class Board {
 
     promotePawn(pawn){
 
+        let board = document.getElementById("board");
 
-        
+        let promoMenu;
+        if(pawn.color === 'white'){
+            promoMenu = document.getElementsByClassName("white-promotion-menu")[0];
+        }else{
+            promoMenu = document.getElementsByClassName("black-promotion-menu")[0];
+        }
+
+        board.style.visibility = "hidden";
+        promoMenu.style.visibility = "visible";
     }
 }
 
@@ -944,15 +969,78 @@ boardPositions.forEach((element, index) => {
     }
 });
 
+let board = new Board();
+
 const boardPieces = [...document.querySelectorAll(".piece, .empty")];
 
-const board = new Board();
+const promotionMenuPieces = [...document.querySelectorAll(".promo")];
 
+function handlePromotion(importantClass){
+
+}
+
+promotionMenuPieces.forEach(button => {
+
+    button.addEventListener('click', (eventObject) => {
+
+        let importantClass = eventObject.target.classList[1];
+
+        // TODO: Need to determine square landed on
+        let lastPiece;
+        for(const [squareId, piece] of Object.entries(board.squares)){
+            if(board.squares[squareId] !== null){
+                if(board.squares[squareId].numberOfMostRecentMove === board.numMovesMade){
+                    lastPiece = board.squares[squareId];
+                    break; 
+                }
+            }
+        }
+
+        // TODO: Replace the pawn on the square with the selected piece
+        let squareId = lastPiece.squareId.slice();
+        let currentSquareList = document.getElementsByClassName(squareId);
+        let currentSquareTableCell = currentSquareList[0];
+        let currentSquareButton = currentSquareList[1];
+
+        const promotionPieces = {
+            'queen-white': '&#9813',
+            'queen-black': '&#9819',
+            'rook-white': '&#9814',
+            'rook-black': '&#9820',
+            'bishop-white': '&#9815',
+            'bishop-black': '&#9821',
+            'knight-white': '&#9816',
+            'knight-black': '&#9822'
+        }
+
+        let [typeOfPiece, colorOfPiece] = importantClass.split("-");
+
+        currentSquareButton.innerHTML = promotionPieces[importantClass];
+        board.squares[squareId] = new Piece(typeOfPiece, colorOfPiece);
+
+        // TODO: Look into this further, I am not sure if it could cause problems
+        currentSquareButton.removeAttribute("id");
+
+        //TODO: Toggle the display for the board and selection menu
+
+        let boardElement = document.getElementById("board");
+        let promoMenu;
+        if(colorOfPiece === 'white'){
+            promoMenu = document.getElementsByClassName("white-promotion-menu")[0];
+        }else{
+            promoMenu = document.getElementsByClassName("black-promotion-menu")[0];
+        }
+
+        boardElement.style.visibility = "visible";
+        promoMenu.style.visibility = "hidden";
+
+    });
+});
 
 // Respond to click events on each button
 boardPieces.forEach(button => {
     button.addEventListener('click', (eventObject) => {
-        
+    
 
         if(board.isCheckMate(board.turn)){
             console.log(`${board.turn} has been CHECKMATED!`);
@@ -1050,7 +1138,7 @@ boardPieces.forEach(button => {
             // Move the piece to the empty square
 
             // Perform en Passant if it is allowed
-            if(board.enPassantAllowed(board.selectedElement, squareId)){
+            if(board.selectedElement.pieceType.name === 'pawn' && board.enPassantAllowed(board.selectedElement, squareId)){
                 board.enPassantTake(board.selectedElement, squareId);
             }else{
                 board.movePieceToEmpty(board.selectedElement, squareId);
