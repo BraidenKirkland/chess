@@ -4,6 +4,28 @@ html, body {
     position: relative;
 }
 
+.game {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.taken-pieces-black {
+    margin-left: 75px;
+}
+
+.taken-pieces-white {
+    margin-right: 75px;
+}
+
+.taken-pieces-black-list, .taken-pieces-white-list {
+    font-size: 2.5em;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    height: 50%
+}
+
 #board {
    width: 700px;
    height: 700px;
