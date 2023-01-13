@@ -1067,11 +1067,15 @@ boardPieces.forEach(button => {
         // Need to get valid moves of previous (if there was a previous)
 
         // Get validMoves of the clicked piece, if it was a piece
-        let validMoves;
+        let validMoves = [];
         if(clickedPiece !== null){
             validMoves = board.getValidMoves(squareId);
-        }else{
-            validMoves = [];
+        }
+
+        if(clickedPiece && board.inCheck(clickedPiece.color)) {
+            validMoves = validMoves.filter(move => board.moveRemovesCheck(clickedPiece, move));
+        }else if(clickedPiece && !board.inCheck(clickedPiece.color)) {
+            validMoves = validMoves.filter(move => !board.moveCreatesCheck(clickedPiece, move));
         }
       
         
@@ -1174,6 +1178,9 @@ boardPieces.forEach(button => {
             let previousPieceName = board.selectedElement.pieceType.name;
             let castlingPieces = ['rook', 'king'];
             if(castlingPieces.includes(clickedPieceName) && castlingPieces.includes(previousPieceName)){
+                if(board.inCheck(clickedPiece.color)){
+                    return;
+                }
                 if(previousPieceName !== clickedPieceName){
                     if(previousPieceName === 'rook'){
                         board.castle(board.selectedElement, clickedPiece);
