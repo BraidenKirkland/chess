@@ -778,6 +778,7 @@ class Board {
     takePiece(killingPiece, victimPiece){
 
 
+
         console.log("HERE!!!!!!!!!");
         // Get the current square id of each piece
         let victimSquareId = victimPiece.squareId.slice();
@@ -837,10 +838,42 @@ class Board {
         
         killingPiece.squareId = victimSquareId;
 
+        const piecesToSymbols = {
+            'pawn': {
+                'white': '&#9817',
+                'black': '&#9823'
+            },
+            'bishop': {
+                'white': '&#9815',
+                'black': '&#9821'
+            },
+            'knight': {
+                'white': '&#9816',
+                'black': '&#9822'
+            },
+            'queen': {
+                'white': '&#9813',
+                'black': '&#9819'
+            },
+            'king': {
+                'white': '&#9812',
+                'black': '&#9818'
+            },
+            'rook': {
+                'white': '&#9814',
+                'black': '&#9820'
+            }
+        };
+        
+        let takenPieceIcon = document.createElement('span');
+        takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.pieceType.name][victimPiece.color];
+
         if(victimPiece.color === 'white'){
             this.whitePiecesKilled.push(victimPiece)
+            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
         }else{
             this.blackPiecesKilled.push(victimPiece);
+            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
         }
 
         this.numMovesMade++;
@@ -970,6 +1003,22 @@ boardPositions.forEach((element, index) => {
 });
 
 let board = new Board();
+
+document.getElementById('reset').addEventListener('click', () => {
+    document.getElementById("board").style.visibility = "hidden";
+    document.getElementById('reset').style.visibility = "hidden";
+    document.querySelector('.confirm-reset').style.visibility = "visible";
+});
+
+document.getElementById('final-reset').addEventListener('click', () => {
+    location.reload();
+});
+
+document.getElementById('quit-reset').addEventListener('click', () => {
+    document.getElementById("board").style.visibility = "visible";
+    document.getElementById('reset').style.visibility = "visible";
+    document.querySelector('.confirm-reset').style.visibility = "hidden";
+});
 
 const boardPieces = [...document.querySelectorAll(".piece, .empty")];
 
