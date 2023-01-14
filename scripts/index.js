@@ -37,6 +37,33 @@ const pawn = {
     name: 'pawn',
 }
 
+const piecesToSymbols = {
+    'pawn': {
+        'white': '&#9817',
+        'black': '&#9823'
+    },
+    'bishop': {
+        'white': '&#9815',
+        'black': '&#9821'
+    },
+    'knight': {
+        'white': '&#9816',
+        'black': '&#9822'
+    },
+    'queen': {
+        'white': '&#9813',
+        'black': '&#9819'
+    },
+    'king': {
+        'white': '&#9812',
+        'black': '&#9818'
+    },
+    'rook': {
+        'white': '&#9814',
+        'black': '&#9820'
+    }
+};
+
 const pawnFwdMoves = (moveCount) => {
     if(moveCount > 0){
         return [[0, 1]];
@@ -604,11 +631,17 @@ class Board {
 
     enPassantTake(takingPawn, diagonalSquare){
 
+        let takenPieceIcon = document.createElement('span');
+        let colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
+        takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
+
         let neighborSquare;
         if(takingPawn.color === 'white'){
             neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
+            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
         }else{
             neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
+            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
         }
 
         this.movePieceToEmpty(takingPawn, diagonalSquare);
@@ -777,9 +810,6 @@ class Board {
     */
     takePiece(killingPiece, victimPiece){
 
-
-
-        console.log("HERE!!!!!!!!!");
         // Get the current square id of each piece
         let victimSquareId = victimPiece.squareId.slice();
         let killingSquareId = killingPiece.squareId.slice();
@@ -837,33 +867,6 @@ class Board {
 
         
         killingPiece.squareId = victimSquareId;
-
-        const piecesToSymbols = {
-            'pawn': {
-                'white': '&#9817',
-                'black': '&#9823'
-            },
-            'bishop': {
-                'white': '&#9815',
-                'black': '&#9821'
-            },
-            'knight': {
-                'white': '&#9816',
-                'black': '&#9822'
-            },
-            'queen': {
-                'white': '&#9813',
-                'black': '&#9819'
-            },
-            'king': {
-                'white': '&#9812',
-                'black': '&#9818'
-            },
-            'rook': {
-                'white': '&#9814',
-                'black': '&#9820'
-            }
-        };
         
         let takenPieceIcon = document.createElement('span');
         takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.pieceType.name][victimPiece.color];
