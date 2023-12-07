@@ -24,4 +24,23 @@ export class Pawn extends Piece {
 
         return [[0, 2], [0, 1]];
     }
+
+    canPromote() {
+        return this.ranksAdvanced === 6;
+    }
+
+    promote() {
+
+        let board = document.getElementById("board");
+
+        let promoMenu;
+        if (this.color === 'white') {
+            promoMenu = document.getElementsByClassName("white-promotion-menu")[0];
+        } else {
+            promoMenu = document.getElementsByClassName("black-promotion-menu")[0];
+        }
+
+        board.style.visibility = "hidden";
+        promoMenu.style.visibility = "visible";
+    }
 }

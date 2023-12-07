@@ -672,8 +672,8 @@ class Board {
             let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
             pieceToMove.ranksAdvanced += verticalDistance;
 
-            if(this.promotionPossible(pieceToMove)){
-                this.promotePawn(pieceToMove);
+            if(pieceToMove.canPromote()){
+                pieceToMove.promote();
             }
 
         }
@@ -838,34 +838,10 @@ class Board {
         if(killingPiece.type === 'pawn'){
             killingPiece.ranksAdvanced++;
 
-            if(this.promotionPossible(killingPiece)){
-                this.promotePawn(killingPiece);
+            if(killingPiece.canPromote()){
+                killingPiece.promote();
             }
-
         }
-
-        // TODO: Check for pawn promotion
-
-
-    }
-
-    promotionPossible(pawn) {
-        return pawn.ranksAdvanced === 6;
-    }
-
-    promotePawn(pawn){
-
-        let board = document.getElementById("board");
-
-        let promoMenu;
-        if(pawn.color === 'white'){
-            promoMenu = document.getElementsByClassName("white-promotion-menu")[0];
-        }else{
-            promoMenu = document.getElementsByClassName("black-promotion-menu")[0];
-        }
-
-        board.style.visibility = "hidden";
-        promoMenu.style.visibility = "visible";
     }
 }
 
@@ -951,10 +927,6 @@ document.getElementById('quit-reset').addEventListener('click', () => {
 const boardPieces = [...document.querySelectorAll(".piece, .empty")];
 
 const promotionMenuPieces = [...document.querySelectorAll(".promo")];
-
-function handlePromotion(importantClass){
-
-}
 
 promotionMenuPieces.forEach(button => {
 
