@@ -1,6 +1,12 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
 import { MoveValidator } from "./MoveValidator.js";
-import { highlightElement, addHighlightToElements, removeHighlightFromElements } from "./helpers.js";
+import { 
+    highlightElement, 
+    addHighlightToElements, 
+    removeHighlightFromElements,
+    getNumericPosition,
+    getRegularPosition
+} from "./helpers.js";
 
 const piecesToSymbols = {
     'pawn': {
@@ -100,110 +106,28 @@ export class Board {
         });
     }
 
-    /* 
-        Check if 'color' has been stalemated
-    */
-
-    squareUnderAttack(squareId, opposingColor) {
-
-        // TODO: Check the rules to see what to do if the opposing side is in check
-        let validMoves;
-        for (const [square, piece] of Object.entries(this.squares)) {
-            if (piece !== null && piece.color === opposingColor) {
-                validMoves = this.moveValidator.getValidMoves(square, this.squares);
-                // TODO: May need a special check for pawns trying to move forward as they are not "attacking"
-                //       However, they will be able to attack both diagonals
-                if (validMoves.includes(squareId)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // TODO: Need to remove highlighting after castling
     castle(rook, king) {
-
-        if (rook.color !== king.color) {
+        if (!this.moveValidator.castlingAllowed(rook, king, this.squares)) {
             return;
         }
 
-        let opposingColor = (king.color === 'white' ? 'black' : 'white');
+        let kingNumericPosition = [Number(getNumericPosition(king.squareId)[0]), Number(getNumericPosition(king.squareId)[1])];
+        let horizontalOffset = kingNumericPosition[0] - Number(getNumericPosition(rook.squareId)[0]);
+        let kingMovementUnits = horizontalOffset > 0 ? -2 : 2;
+        let rookUnitsRelativeToKing = horizontalOffset > 0 ? 1 : -1;
 
-        // Castling is only allowed if neither the rook nor the king have moved
-        if (rook.moveCount !== 0 || king.moveCount !== 0) {
-            return;
-        }
-
-        /* 
-            The rook can be under attack before or after the move, but the king cannot be 
-            under attack before, during, or after the move
-        */
-
-        if (this.moveValidator.inCheck(king.color, this.squares)) {
-            return;
-        }
-
-        let rookNumericPosition = [Number(this.getNumericPosition(rook.squareId)[0]), Number(this.getNumericPosition(rook.squareId)[1])];
-        let kingNumericPosition = [Number(this.getNumericPosition(king.squareId)[0]), Number(this.getNumericPosition(king.squareId)[1])];
-
-        let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
-
-        // Initially assume kingside, then double check offset to confirm
-        let kingMovementUnits = 2;
-        let rookUnitsRelativeToKing = -1; // One unit to king's left if kingside
-        let counter = -1;
-
-        // If offset is positive, then we are castling kingside
-        if (horizontalOffset > 0) {
-            kingMovementUnits = -2;
-            rookUnitsRelativeToKing = 1;  // One unit to king's right if queenside
-            counter = 1;
-        }
-
-
-        let intermediatePositionNumeric = [];
-        let intermediatePosition;
-        // TODO: Have a closer look at the terminating condition to ensure no infinite loop
-        for (let i = rookNumericPosition[0] + counter; i !== kingNumericPosition[0]; i += counter) {
-
-            intermediatePositionNumeric[0] = i;
-            // No change in vertical offset
-            intermediatePositionNumeric[1] = rookNumericPosition[1];
-            intermediatePosition = this.getRegularPosition(intermediatePositionNumeric);
-
-            // Ensure all squares inbetween rook and king are empty
-            if (this.squares[intermediatePosition] !== null) {
-                return;
-            }
-
-            // Ensure that any intermediate squares are also not under attack
-            if (this.squareUnderAttack(intermediatePosition, opposingColor)) {
-                return;
-            }
-        }
-
+        // Calculate new positions for king and rook
         kingNumericPosition[0] += kingMovementUnits;
-        rookNumericPosition[0] = kingNumericPosition[0] + rookUnitsRelativeToKing;
+        let newKingPosition = getRegularPosition(kingNumericPosition);
+        let newRookPosition = getRegularPosition([kingNumericPosition[0] + rookUnitsRelativeToKing, kingNumericPosition[1]]);
 
-        let newKingPosition = this.getRegularPosition(kingNumericPosition);
-        let newRookPosition = this.getRegularPosition(rookNumericPosition);
-
-        // TODO: Ensure the destination square for the king is not under attack
-        if (this.squareUnderAttack(newKingPosition, opposingColor)) {
-            return;
-        }
-
-        // If at this point, assume all of the conditions for legal castling have been passed
+        // Move king and rook to new positions
         this.movePieceToEmpty(king, newKingPosition, true);
         this.movePieceToEmpty(rook, newRookPosition, true);
-
-        // Need this here because otherwise it would result in the wrong turn
         this.changeTurn();
-
-        // It does not matter if the rook's destination square is under attack
     }
+
+
 
     enPassantTake(takingPawn, diagonalSquare) {
 
@@ -365,7 +289,6 @@ export class Board {
         dstSquareButton.classList.add("empty");
         dstSquareButton.classList.add(killingSquareId);
         dstSquareButton.innerHTML = null;
-
 
         killingPiece.squareId = victimSquareId;
 

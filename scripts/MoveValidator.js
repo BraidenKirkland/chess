@@ -429,4 +429,62 @@ Does moving pieceToMove to newPosition remove the check on the king?
         return true;
     }
 
+    squareUnderAttack(squareId, opposingColor, squares) {
+
+        // TODO: Check the rules to see what to do if the opposing side is in check
+        let validMoves;
+        for (const [square, piece] of Object.entries(squares)) {
+            if (piece !== null && piece.color === opposingColor) {
+                validMoves = this.getValidMoves(square, squares);
+                // TODO: May need a special check for pawns trying to move forward as they are not "attacking"
+                //       However, they will be able to attack both diagonals
+                if (validMoves.includes(squareId)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    castlingAllowed(rook, king, squares) {
+        if (rook.color !== king.color) {
+            return false;
+        }
+
+        let opposingColor = (king.color === 'white' ? 'black' : 'white');
+
+        // Castling is only allowed if neither the rook nor the king have moved
+        if (rook.moveCount !== 0 || king.moveCount !== 0) {
+            return false;
+        }
+
+        if (this.inCheck(king.color, squares)) {
+            return false;
+        }
+
+        let rookNumericPosition = [Number(getNumericPosition(rook.squareId)[0]), Number(getNumericPosition(rook.squareId)[1])];
+        let kingNumericPosition = [Number(getNumericPosition(king.squareId)[0]), Number(getNumericPosition(king.squareId)[1])];
+
+        let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
+        let counter = horizontalOffset > 0 ? 1 : -1;
+
+        for (let i = rookNumericPosition[0] + counter; i !== kingNumericPosition[0]; i += counter) {
+            let intermediatePosition = getRegularPosition([i, rookNumericPosition[1]]);
+
+            // Check if intermediate squares are empty and not under attack
+            if (squares[intermediatePosition] !== null || this.squareUnderAttack(intermediatePosition, opposingColor, squares)) {
+                return false;
+            }
+        }
+
+        let newKingPosition = getRegularPosition([kingNumericPosition[0] + (horizontalOffset > 0 ? -2 : 2), kingNumericPosition[1]]);
+        // Check if the destination square for the king is under attack
+        if (this.squareUnderAttack(newKingPosition, opposingColor, squares)) {
+            return false;
+        }
+
+        return true;
+    }
+
 }
