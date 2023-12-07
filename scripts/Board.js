@@ -134,7 +134,7 @@ export class Board {
             for (let j = 0; j < validMoves.length; j++) {
                 move = validMoves[j];
                 // Check whether moving this piece to one of its valid moves will create a check on the king
-                if (!this.moveCreatesCheck(currentPiece, move)) {
+                if (!this.moveValidator.moveCreatesCheck(currentPiece, this.squares, move)) {
 
                     // If there exists a valid move for a piece of this color that does not result in check => no stalemate
                     return false;
@@ -349,45 +349,6 @@ export class Board {
         this.changeTurn();
     }
 
-
-    /* 
-    Check if moving the input piece would result in a check on its color's king
-    TODO: The method is currently oversimplified. Need to consider where the piece is going 
-          to be moved to because it may kill the piece causing the check
-          **** maybe moveRemovesCheck() can handle this ???? ****
-
-        ASSUMES THAT THE MOVE IS VALID
-    */
-    moveCreatesCheck(pieceToMove, newPosition = null) {
-
-        let retVal = false;
-
-        // record the squareId of the piece
-        let currentPosition = pieceToMove.squareId;
-
-        // temporarily remove the piece from the board
-        this.squares[currentPosition] = null;
-
-        let piecePresentlyInNewPosition = null;
-
-        // When a piece currently occupies the new position
-        // Replace it with the piece that is being moved
-        if (newPosition !== null && this.squares[newPosition] !== null) {
-            piecePresentlyInNewPosition = this.squares[newPosition];
-        }
-
-        this.squares[newPosition] = pieceToMove;
-
-        // Check if this board arrangement results in a check
-        retVal = this.moveValidator.inCheck(pieceToMove.color, this.squares);
-
-        // Reset the board
-        this.squares[currentPosition] = pieceToMove;
-        this.squares[newPosition] = piecePresentlyInNewPosition;
-
-        return retVal;
-    }
-
     /* 
     Method to swap the killing piece with the piece being killed.
     TODO: Remove old highlight from the piece that was killed
@@ -398,7 +359,7 @@ export class Board {
         let victimSquareId = victimPiece.squareId.slice();
         let killingSquareId = killingPiece.squareId.slice();
 
-        if (this.moveCreatesCheck(killingPiece, victimSquareId)) {
+        if (this.moveValidator.moveCreatesCheck(killingPiece, this.squares, victimSquareId)) {
             return;
         }
 
@@ -514,7 +475,7 @@ export class Board {
                     console.log('in check');
                     validMoves = validMoves.filter(move => this.moveValidator.moveRemovesCheck(clickedPiece, move, this.squares));
                 } else if (clickedPiece && !this.moveValidator.inCheck(clickedPiece.color, this.squares)) {
-                    validMoves = validMoves.filter(move => !this.moveCreatesCheck(clickedPiece, move));
+                    validMoves = validMoves.filter(move => !this.moveValidator.moveCreatesCheck(clickedPiece, this.squares, move));
                 }
 
 
@@ -564,7 +525,7 @@ export class Board {
 
                     // Check if moving piece creates check on king
                     // TODO: Make sure turns are maintained
-                    if (!this.moveValidator.inCheck(this.selectedElement.color, this.squares) && this.moveCreatesCheck(this.selectedElement, squareId)) {
+                    if (!this.moveValidator.inCheck(this.selectedElement.color, this.squares) && this.moveValidator.moveCreatesCheck(this.selectedElement, this.squares, squareId)) {
                         return;
                     }
 

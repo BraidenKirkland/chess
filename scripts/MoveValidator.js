@@ -353,5 +353,41 @@ Does moving pieceToMove to newPosition remove the check on the king?
         return theoreticalMoves;
     }
     
+    /* 
+    Check if moving the input piece would result in a check on its color's king
+    TODO: The method is currently oversimplified. Need to consider where the piece is going 
+        to be moved to because it may kill the piece causing the check
+        **** maybe moveRemovesCheck() can handle this ???? ****
+
+        ASSUMES THAT THE MOVE IS VALID
+    */
+    moveCreatesCheck(pieceToMove, squares, newPosition = null) {
+        let retVal = false;
+
+        // record the squareId of the piece
+        let currentPosition = pieceToMove.squareId;
+
+        // temporarily remove the piece from the board
+        squares[currentPosition] = null;
+
+        let piecePresentlyInNewPosition = null;
+
+        // When a piece currently occupies the new position
+        // Replace it with the piece that is being moved
+        if (newPosition !== null && squares[newPosition] !== null) {
+            piecePresentlyInNewPosition = squares[newPosition];
+        }
+
+        squares[newPosition] = pieceToMove;
+
+        // Check if this board arrangement results in a check
+        retVal = this.inCheck(pieceToMove.color, squares);
+
+        // Reset the board
+        squares[currentPosition] = pieceToMove;
+        squares[newPosition] = piecePresentlyInNewPosition;
+
+        return retVal;
+    }
 
 }
