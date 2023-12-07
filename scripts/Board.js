@@ -104,48 +104,6 @@ export class Board {
         Check if 'color' has been stalemated
     */
 
-    isStaleMate(color) {
-        // Cannot be a stalemate if the piece is already in check
-        if (this.moveValidator.inCheck(color, this.squares)) {
-            return false;
-        }
-
-        let friendlyPieces = [];
-
-        for (const [squareId, piece] of Object.entries(this.squares)) {
-
-            if (piece !== null && piece.color === color) {
-                piece.squareId = squareId;
-                friendlyPieces.push(piece)
-            }
-        }
-
-        let currentPiece;
-        let move;
-
-        // Iterate through all pieces of this color
-        for (let i = 0; i < friendlyPieces.length; i++) {
-            currentPiece = friendlyPieces[i];
-
-            // For each piece, get its valid moves
-            let validMoves = this.moveValidator.getValidMoves(currentPiece.squareId.slice(), this.squares);
-
-            // Iterate through all valid moves for each piece
-            for (let j = 0; j < validMoves.length; j++) {
-                move = validMoves[j];
-                // Check whether moving this piece to one of its valid moves will create a check on the king
-                if (!this.moveValidator.moveCreatesCheck(currentPiece, this.squares, move)) {
-
-                    // If there exists a valid move for a piece of this color that does not result in check => no stalemate
-                    return false;
-                }
-            }
-        }
-
-        // No valid moves except those that create check
-        return true;
-    }
-
     squareUnderAttack(squareId, opposingColor) {
 
         // TODO: Check the rules to see what to do if the opposing side is in check
@@ -183,7 +141,6 @@ export class Board {
             under attack before, during, or after the move
         */
 
-        // TODO: Ensure the king is not currently in check - not allowed to castle in this case
         if (this.moveValidator.inCheck(king.color, this.squares)) {
             return;
         }
@@ -446,7 +403,7 @@ export class Board {
                     return;
                 }
 
-                if (this.isStaleMate(this.turn)) {
+                if (this.moveValidator.isStaleMate(this.turn, this.squares)) {
                     return;
                 }
 
@@ -472,7 +429,6 @@ export class Board {
                 }
 
                 if (clickedPiece && this.moveValidator.inCheck(clickedPiece.color, this.squares)) {
-                    console.log('in check');
                     validMoves = validMoves.filter(move => this.moveValidator.moveRemovesCheck(clickedPiece, move, this.squares));
                 } else if (clickedPiece && !this.moveValidator.inCheck(clickedPiece.color, this.squares)) {
                     validMoves = validMoves.filter(move => !this.moveValidator.moveCreatesCheck(clickedPiece, this.squares, move));
@@ -484,7 +440,6 @@ export class Board {
 
                     // No element was currently selected and an empty square was clicked on
                     if (clickedPiece === null) {
-                        console.log('the clicked piece is null');
                         return;
                     }
 

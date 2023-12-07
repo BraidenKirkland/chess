@@ -19,7 +19,6 @@ export const highlightElement = (element, color) => {
 
 
 export const addHighlightToElements = (moveList) => {
-    console.log(moveList);
     moveList.forEach((square) => {
         let dstSqaure = document.querySelector('.' + square);
         highlightElement(dstSqaure, 'yellow');

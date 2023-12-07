@@ -281,7 +281,6 @@ Does moving pieceToMove to newPosition remove the check on the king?
     getValidMoves(squareId, squares) {
         let currentPiece = squares[squareId];
         let theoreticalMoves = this.theoreticalMoves(squareId, currentPiece);
-        // console.log(theoreticalMoves);
         let validMoves = theoreticalMoves.filter(dstSquareId => this.validMove(squareId, dstSquareId, currentPiece, squares, this.numMovesMade));
         return validMoves;
     }
@@ -388,6 +387,46 @@ Does moving pieceToMove to newPosition remove the check on the king?
         squares[newPosition] = piecePresentlyInNewPosition;
 
         return retVal;
+    }
+
+    isStaleMate(color, squares) {
+        // Cannot be a stalemate if the piece is already in check
+        if (this.inCheck(color, squares)) {
+            return false;
+        }
+
+        let friendlyPieces = [];
+        for (const [squareId, piece] of Object.entries(squares)) {
+            if (piece !== null && piece.color === color) {
+                piece.squareId = squareId;
+                friendlyPieces.push(piece)
+            }
+        }
+
+        let currentPiece;
+        let move;
+
+        // Iterate through all pieces of this color
+        for (let i = 0; i < friendlyPieces.length; i++) {
+            currentPiece = friendlyPieces[i];
+
+            // For each piece, get its valid moves
+            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares);
+
+            // Iterate through all valid moves for each piece
+            for (let j = 0; j < validMoves.length; j++) {
+                move = validMoves[j];
+                // Check whether moving this piece to one of its valid moves will create a check on the king
+                if (!this.moveCreatesCheck(currentPiece, squares, move)) {
+
+                    // If there exists a valid move for a piece of this color that does not result in check => no stalemate
+                    return false;
+                }
+            }
+        }
+
+        // No valid moves except those that create check
+        return true;
     }
 
 }
