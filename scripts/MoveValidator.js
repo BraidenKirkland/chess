@@ -486,5 +486,4 @@ Does moving pieceToMove to newPosition remove the check on the king?
 
         return true;
     }
-
 }
