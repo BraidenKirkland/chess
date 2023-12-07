@@ -1,41 +1,5 @@
-
+import { createPiece } from "./PieceFactory.js"
 // move format [left-right, up-down]
-
-const king = {
-    // left, right, up, down, up and right, up and left, down and left, down and right
-    moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]],
-    limitations: true,
-    name: 'king'
-}
-
-const queen = {
-    moves: [[-1, 0], [1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, -1], [-1, 1]],
-    limitations: false,
-    name: 'queen'
-}
-
-const bishop = {
-    moves: [[1, 1], [1, -1], [-1, -1], [-1, 1]],
-    limitations: false,
-    name: 'bishop'
-}
-
-const knight = {
-    moves: [[-2, 1], [-2, -1], [-1, 2], [-1, -2], [2, 1], [2, -1], [1, 2], [1, -2]],
-    limitations: true,
-    name: 'knight'
-}
-
-const rook = {
-    moves: [[-1, 0], [1, 0], [0, 1], [0, -1]],
-    limitations: false,
-    name: 'rook'
-}
-
-const pawn = {
-    killMoves: [[-1, 1], [1, 1]],
-    name: 'pawn',
-}
 
 const piecesToSymbols = {
     'pawn': {
@@ -63,16 +27,6 @@ const piecesToSymbols = {
         'black': '&#9820'
     }
 };
-
-const pawnFwdMoves = (moveCount) => {
-    if(moveCount > 0){
-        return [[0, 1]];
-    }
-
-    return [[0, 2], [0, 1]];
-};
-
-let pieces = [king, queen, bishop, knight, rook, pawn];
 
 class Board {
 
@@ -127,7 +81,7 @@ class Board {
             // Extract piece info from element id
             let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
              // mark this position as occupied by a black piece
-            this.squares[position] = new Piece(pieceType, 'black');
+            this.squares[position] = createPiece('black', pieceType);
         });
 
         const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
@@ -138,7 +92,7 @@ class Board {
             // Extract piece info from element id
             let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
             // mark this position as occupied by a white piece
-            this.squares[position] = new Piece(pieceType, 'white'); 
+            this.squares[position] = createPiece('white', pieceType); 
         });
     }
 
@@ -163,12 +117,12 @@ class Board {
         let startingPosition = [Number(this.getNumericPosition(srcSquareId)[0]), Number(this.getNumericPosition(srcSquareId)[1])];
         let newPosition = [];
 
-        let isPawn = piece.pieceType.name === 'pawn';
+        let isPawn = piece.type === 'pawn';
 
-        for(let i=0; !isPawn && i < piece.pieceType.moves.length; i++){
+        for(let i=0; !isPawn && i < piece.moves.length; i++){
             for(let j=1; j < 8; j++){
-                newPosition[0] = startingPosition[0] + piece.pieceType.moves[i][0] * j;
-                newPosition[1] = startingPosition[1] + piece.pieceType.moves[i][1] * j;
+                newPosition[0] = startingPosition[0] + piece.moves[i][0] * j;
+                newPosition[1] = startingPosition[1] + piece.moves[i][1] * j;
 
                 // Make sure the calculated position is on the board
                 if (newPosition[0] > 7 || newPosition[0] < 0) {
@@ -182,15 +136,15 @@ class Board {
 
                 // If there is a limitation (e.g. king) only take the first move (j=1)
                 // This works for knights as well because there is only one possible move in each direction
-                if (piece.pieceType.limitations) {
+                if (piece.limitations) {
                     break;
                 }                  
             }
         }
 
         if(isPawn){
-            let fwdMoves = pawnFwdMoves(piece.moveCount);
-            let killMoves = piece.pieceType.killMoves;
+            let fwdMoves = piece.getFwdMoves();
+            let killMoves = piece.moves;
             for(let i=0; i < fwdMoves.length; i++){
                 // Reverse direction for black pieces
                 newPosition[0] = startingPosition[0] + (piece.color === 'white' ? fwdMoves[i][0] : -1 * fwdMoves[i][0]);
@@ -217,6 +171,8 @@ class Board {
                 if (newPosition[1] > 7 || newPosition[1] < 0) {
                     continue;
                 }
+
+                console.log(newPosition)
   
                 theoreticalMoves.push(this.getRegularPosition(newPosition));  
             }
@@ -234,7 +190,7 @@ class Board {
 
         // The one and only check for the knight has already been passed
         // This is because there is no need to check intermediate squares
-        if(piece.pieceType.name === 'knight'){
+        if(piece.type === 'knight'){
             return true;
         }
 
@@ -274,7 +230,7 @@ class Board {
          */
 
         // TODO: Possible check en Passant here??
-        if(piece.pieceType.name === 'pawn' && horizontal !== 0){
+        if(piece.type === 'pawn' && horizontal !== 0){
             let dstSquare = this.getRegularPosition(dstSquareIdNumeric);
             // The move is not allowd if the destination square has no piece or a piece of the same color
 
@@ -287,7 +243,7 @@ class Board {
             return true;
         }
 
-        if(piece.pieceType.name === 'pawn' && horizontal === 0){
+        if(piece.type === 'pawn' && horizontal === 0){
             let dstSquare = this.getRegularPosition(dstSquareIdNumeric);
             // The move is not allowd if the destination square is occupied by a piece of any color
             if(this.squares[dstSquare] !== null){
@@ -306,7 +262,6 @@ class Board {
 
             return true;
         }
-
 
         let intermediatePosition = [];
         let intermediateSquare;
@@ -355,12 +310,11 @@ class Board {
         let enemyPieces = [];
 
         for(const [squareId, piece] of Object.entries(this.squares)){
-
             if(piece === null){
                 continue;
             }
 
-            if(piece.color === color && piece.pieceType.name === 'king'){
+            if(piece.color === color && piece.type === 'king'){
                 kingSquareId = squareId;
                 continue;
             }
@@ -602,7 +556,7 @@ class Board {
 
         // Ensure there is an enempy pawn directly beside 
         let pieceOnNeighborSquare = this.squares[neighborSquare];
-        if(pieceOnNeighborSquare === null || pieceOnNeighborSquare.pieceType.name !== 'pawn' || pieceOnNeighborSquare.color === takingPawn.color){
+        if(pieceOnNeighborSquare === null || pieceOnNeighborSquare.type !== 'pawn' || pieceOnNeighborSquare.color === takingPawn.color){
             return false;
         }
 
@@ -666,10 +620,7 @@ class Board {
         // TODO: Check the list of valid moves
         let validMoves = this.getValidMoves(squareIdofPiece);
 
-        console.log(validMoves);
-
         if(!validMoves.includes(newPosition) && !castling){
-            console.log("Returning");
             return;
         }
 
@@ -716,7 +667,7 @@ class Board {
         pieceToMove.numberOfMostRecentMove = this.numMovesMade;
 
         // TODO: Need to determine if the pawn moved two squares forward or one square forward
-        if(pieceToMove.pieceType.name === 'pawn'){
+        if(pieceToMove.type === 'pawn'){
 
             let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
             pieceToMove.ranksAdvanced += verticalDistance;
@@ -819,7 +770,7 @@ class Board {
             return;
         }
 
-        if(killingPiece.pieceType.name === 'pawn'){
+        if(killingPiece.type === 'pawn'){
             killingPiece.moveCount++;
         }
 
@@ -869,7 +820,7 @@ class Board {
         killingPiece.squareId = victimSquareId;
         
         let takenPieceIcon = document.createElement('span');
-        takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.pieceType.name][victimPiece.color];
+        takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.type][victimPiece.color];
 
         if(victimPiece.color === 'white'){
             this.whitePiecesKilled.push(victimPiece)
@@ -884,7 +835,7 @@ class Board {
         killingPiece.killCount++;
         killingPiece.moveCount++;
 
-        if(killingPiece.pieceType.name === 'pawn'){
+        if(killingPiece.type === 'pawn'){
             killingPiece.ranksAdvanced++;
 
             if(this.promotionPossible(killingPiece)){
@@ -898,8 +849,7 @@ class Board {
 
     }
 
-    promotionPossible(pawn){
-
+    promotionPossible(pawn) {
         return pawn.ranksAdvanced === 6;
     }
 
@@ -917,31 +867,6 @@ class Board {
         board.style.visibility = "hidden";
         promoMenu.style.visibility = "visible";
     }
-}
-
-class Piece {
-
-    constructor(pieceType, color) {
-        // Make a deep copy of each piece - important for determining available moves for pawns
-        this.pieceType = Object.assign({}, pieces.find(piece => piece.name === pieceType));
-        // this.pieceType = pieces.find(piece => piece.name === pieceType);
-        this.color = color;
-        this.squareId = null;
-        this.moveCount = 0; // Add the move count here so each piece keeps its own separate count
-        
-        // To track if the pawn moved one or two squares on its first move (for en passant)
-        this.firstMoveRank = 0;
-
-        // For en passant
-        this.numberOfMostRecentMove = 0;
-
-        // For en passant, this number must be exactly three for the capturing pawn
-        // If this number === 6 for pawns, they can be promoted
-        this.ranksAdvanced = 0;
-
-        this.killCount = 0;
-    }
-
 }
 
 /* 
@@ -1068,7 +993,7 @@ promotionMenuPieces.forEach(button => {
         let [typeOfPiece, colorOfPiece] = importantClass.split("-");
 
         currentSquareButton.innerHTML = promotionPieces[importantClass];
-        board.squares[squareId] = new Piece(typeOfPiece, colorOfPiece);
+        board.squares[squareId] = createPiece(colorOfPiece, typeOfPiece);
 
         // TODO: Look into this further, I am not sure if it could cause problems
         currentSquareButton.removeAttribute("id");
@@ -1194,15 +1119,13 @@ boardPieces.forEach(button => {
             // Move the piece to the empty square
 
             // Perform en Passant if it is allowed
-            if(board.selectedElement.pieceType.name === 'pawn' && board.enPassantAllowed(board.selectedElement, squareId)){
+            if(board.selectedElement.type === 'pawn' && board.enPassantAllowed(board.selectedElement, squareId)){
                 board.enPassantTake(board.selectedElement, squareId);
             }else{
                 board.movePieceToEmpty(board.selectedElement, squareId);
             }
 
-
             return;
-
         }
 
         // Case 4 - An element is already selected and the user clicked on a different element
@@ -1226,15 +1149,15 @@ boardPieces.forEach(button => {
     
             // Check if the user indicated they wanted to castle and if so perform the castle
             
-            let clickedPieceName = clickedPiece.pieceType.name;
-            let previousPieceName = board.selectedElement.pieceType.name;
+            let clickedPieceType = clickedPiece.type;
+            let previousPieceType = board.selectedElement.type;
             let castlingPieces = ['rook', 'king'];
-            if(castlingPieces.includes(clickedPieceName) && castlingPieces.includes(previousPieceName)){
+            if(castlingPieces.includes(clickedPieceType) && castlingPieces.includes(previousPieceType)){
                 if(board.inCheck(clickedPiece.color)){
                     return;
                 }
-                if(previousPieceName !== clickedPieceName){
-                    if(previousPieceName === 'rook'){
+                if(previousPieceType !== clickedPieceType){
+                    if(previousPieceType === 'rook'){
                         board.castle(board.selectedElement, clickedPiece);
                     }else{
                         board.castle(clickedPiece, board.selectedElement);
