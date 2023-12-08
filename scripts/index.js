@@ -1,66 +1,9 @@
 import { Board } from "./Board.js";
+import { BoardSetup } from "./BoardSetup.js";
 import { createPiece } from "./Pieces/PieceFactory.js"
-// move format [left-right, up-down]
 
-/* 
-    Set backgroundColor of 'element' to 'color'
-*/
-
-
-// Store all board squares in an array
-const boardPositions = [...document.querySelectorAll('td')].reverse();
-
-let letters = 'hgfedcba';
-let numbers = '12345678';
-
-// Label each square with its position (as a html class)
-let rowIndex = 0;
-let letter, number;
-boardPositions.forEach((element, index) => {
-    letter = letters[index % 8];
-    if (index < 8) {
-        number = '1';
-    } else if (index < 16) {
-        number = '2';
-    } else if (index < 24) {
-        number = '3';
-    } else if (index < 32) {
-        number = '4';
-    } else if (index < 40) {
-        number = '5';
-    } else if (index < 48) {
-        number = '6';
-    } else if (index < 56) {
-        number = '7';
-    } else {
-        number = '8';
-    }
-
-    // add board position to <td> class list
-    element.classList.add(letter + number);
-    // add board position to <button> class list
-    if (element.firstElementChild != null) {
-        element.firstElementChild.classList.add(letter + number);
-    }
-});
-
+const boardSetup = new BoardSetup();
 const board = new Board();
-
-document.getElementById('reset').addEventListener('click', () => {
-    document.getElementById("board").style.visibility = "hidden";
-    document.getElementById('reset').style.visibility = "hidden";
-    document.querySelector('.confirm-reset').style.visibility = "visible";
-});
-
-document.getElementById('final-reset').addEventListener('click', () => {
-    location.reload();
-});
-
-document.getElementById('quit-reset').addEventListener('click', () => {
-    document.getElementById("board").style.visibility = "visible";
-    document.getElementById('reset').style.visibility = "visible";
-    document.querySelector('.confirm-reset').style.visibility = "hidden";
-});
 
 const promotionMenuPieces = [...document.querySelectorAll(".promo")];
 

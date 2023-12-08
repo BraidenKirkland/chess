@@ -8,6 +8,7 @@ export class Board {
     constructor() {
         this.moveValidator = new MoveValidator();
         this.uiManager = new UIManager();
+        this.uiManager.setupEventListeners(this.handleButtonClick.bind(this));
         // arrays to track pieces as they are killed
         this.whitePiecesKilled = [];
         this.blackPiecesKilled = [];
@@ -21,9 +22,6 @@ export class Board {
         this.squares = {};
         this.createSquares();
         this.addPiecesToBoard();
-        this.boardPieces = [...document.querySelectorAll(".piece, .empty")];
-
-        this.addEventListenersForPieces();
     }
 
     changeTurn() {
@@ -123,7 +121,7 @@ export class Board {
             pieceToMove.ranksAdvanced += verticalDistance;
 
             if (pieceToMove.canPromote()) {
-                pieceToMove.promote();
+                this.uiManager.showPromotionMenu(pieceToMove.color)
             }
         }
 
@@ -155,17 +153,10 @@ export class Board {
         this.uiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
 
         if (killingPiece.canPromote()) {
-            killingPiece.promote();
+            this.uiManager.showPromotionMenu(killingPiece.color)
         }
 
         return true
-    }
-
-    addEventListenersForPieces() {
-        // Respond to click events on each button
-        this.boardPieces.forEach(button => {
-            button.addEventListener('click', this.handleButtonClick.bind(this));
-        });
     }
 
     handleButtonClick(eventObject) {

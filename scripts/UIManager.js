@@ -164,5 +164,43 @@ export class UIManager {
         this.removeHighlightFromElements(validMovesOfPrevious);
     }
 
+    setupEventListeners(handleClickCallback) {
+        const boardPieces = this.getBoardPieces();
+        boardPieces.forEach(button => {
+            button.addEventListener('click', (event) => {
+                handleClickCallback(event);
+            });
+        });
+    }
 
+    getBoardPieces() {
+        return [...document.querySelectorAll(".piece, .empty")];
+    }
+
+    showPromotionMenu(color) {
+        const board = document.getElementById("board");
+        const promoMenu = document.getElementsByClassName(`${color}-promotion-menu`)[0]
+
+        board.style.visibility = "hidden";
+        promoMenu.style.visibility = "visible";
+    }
+
+    addClassesToBoardSquares() {
+        const letters = 'abcdefgh';
+        const numbers = '12345678';
+        const boardPositions = [...document.querySelectorAll('td')].reverse();
+
+        boardPositions.forEach((element, index) => {
+            const letter = letters[index % 8];
+            const number = numbers[Math.floor(index / 8)];
+
+            // Add board position to <td> class list
+            element.classList.add(letter + number);
+
+            // Add board position to <button> class list, if it exists
+            if (element.firstElementChild) {
+                element.firstElementChild.classList.add(letter + number);
+            }
+        });
+    }
 }
