@@ -53,28 +53,18 @@ export class Board {
             }
         }
     }
-
+    
     addPiecesToBoard() {
-        const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
-        allBlackPieces.forEach(piece => {
+        this.addPiecesOfColor('black');
+        this.addPiecesOfColor('white');
+    }
 
-            // Get position of piece from element class
+    addPiecesOfColor(color) {
+        const allPieces = [...document.querySelectorAll(`button[id$="${color}"]`)];
+        allPieces.forEach(piece => {
             let position = [...piece.classList][1];
-            // Extract piece info from element id
             let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            // mark this position as occupied by a black piece
-            this.squares[position] = createPiece('black', pieceType);
-        });
-
-        const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
-        allWhitePieces.forEach(piece => {
-
-            // Get position of piece from element class
-            let position = [...piece.classList][1];
-            // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            // mark this position as occupied by a white piece
-            this.squares[position] = createPiece('white', pieceType);
+            this.squares[position] = createPiece(color, pieceType);
         });
     }
 
