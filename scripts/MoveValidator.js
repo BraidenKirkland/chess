@@ -423,7 +423,6 @@ export class MoveValidator {
     }
 
     squareUnderAttack(squareId, opposingColor, squares, numMovesMade) {
-
         // TODO: Check the rules to see what to do if the opposing side is in check
         let validMoves;
         for (const [square, piece] of Object.entries(squares)) {

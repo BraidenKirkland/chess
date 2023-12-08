@@ -111,6 +111,7 @@ export class Board {
 
     castle(rook, king) {
         if (!this.moveValidator.castlingAllowed(rook, king, this.squares, this.numMovesMade)) {
+            this.selectedElement = null;
             return;
         }
 
@@ -323,63 +324,65 @@ export class Board {
     addEventListenersForPieces() {
         // Respond to click events on each button
         this.boardPieces.forEach(button => {
-            button.addEventListener('click', (eventObject) => {
-                eventObject.stopPropagation();
-                
-                if (this.moveValidator.isCheckMate(this.turn, this.squares, this.numMovesMade)) {
-                    return;
-                }
-
-                if (this.moveValidator.isStaleMate(this.turn, this.squares, this.numMovesMade)) {
-                    return;
-                }
-
-                // Get ID of the clicked square
-                let squareId = eventObject.target.classList[1];
-
-                // Determine if the square clicked contains a piece
-                let clickedPiece = this.getSquares()[squareId];
-                if (clickedPiece !== null) {
-                    clickedPiece.squareId = squareId;
-                }
-
-
-                // This is the <td> which is the parent of the button that was clicked
-                let parentElementOfButton = document.querySelector("." + squareId);
-
-                // Need to get valid moves of previous (if there was a previous)
-
-                // Get validMoves of the clicked piece, if it was a piece
-                let validMoves = [];
-                if (clickedPiece !== null) {
-                    validMoves = this.moveValidator.getValidMoves(squareId, this.squares, this.numMovesMade);
-                }
-
-                if (clickedPiece && this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
-                    validMoves = validMoves.filter(move => this.moveValidator.moveRemovesCheck(clickedPiece, move, this.squares, this.numMovesMade));
-                } else if (clickedPiece && !this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
-                    validMoves = validMoves.filter(move => !this.moveValidator.moveCreatesCheck(clickedPiece, this.squares, move, this.numMovesMade));
-                }
-
-                // Case 1 - No element currently selected
-                if (this.selectedElement === null) {
-                    this.handleNoPieceSelected(clickedPiece, parentElementOfButton, validMoves);
-
-                    // Case 2 - User clicked on the element already selected
-                } else if (squareId === this.selectedElement.squareId) {
-                    this.handleClickOnSelectedPiece(parentElementOfButton, validMoves)
-
-                    // Case 3 - A piece is already selected and the user clicked on an empty square
-                } else if (this.squares[squareId] === null) {
-                    this.handleClickOnEmptySquare(parentElementOfButton, squareId) 
-                }
-
-                // Case 4 - An element is already selected and the user clicked on a different element
-                else {
-                    this.handleClickOnDifferentPiece(clickedPiece, squareId, parentElementOfButton, validMoves)
-                }
-            });
+            button.addEventListener('click', this.handleButtonClick.bind(this));
         });
+    }
+
+    handleButtonClick(eventObject) {
+        eventObject.stopPropagation();
+
+        if (this.isGameOver()) {
+            return;
+        }
+
+        const squareId = this.getClickedSquareId(eventObject);
+        const clickedPiece = this.getClickedPiece(squareId);
+        const parentElementOfButton = this.getParentElementOfButton(squareId);
+        const validMoves = this.getValidMovesForPiece(clickedPiece, squareId);
+
+        this.processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves);
+    }
+
+    isGameOver() {
+        return this.moveValidator.isCheckMate(this.turn, this.squares, this.numMovesMade) ||
+            this.moveValidator.isStaleMate(this.turn, this.squares, this.numMovesMade);
+    }
+
+    getClickedSquareId(eventObject) {
+        return eventObject.target.classList[1];
+    }
+
+    getClickedPiece(squareId) {
+        let clickedPiece = this.getSquares()[squareId];
+        if (clickedPiece !== null) {
+            clickedPiece.squareId = squareId;
+        }
+        return clickedPiece;
+    }
+
+    getParentElementOfButton(squareId) {
+        return document.querySelector("." + squareId);
+    }
+
+    getValidMovesForPiece(clickedPiece, squareId) {
+        let validMoves = [];
+        if (clickedPiece !== null) {
+            validMoves = this.moveValidator.getValidMoves(squareId, this.squares, this.numMovesMade);
+        }
+
+        return validMoves;
+    }
+
+    processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves) {
+        if (this.selectedElement === null) {
+            this.handleNoPieceSelected(clickedPiece, parentElementOfButton, validMoves);
+        } else if (squareId === this.selectedElement.squareId) {
+            this.handleClickOnSelectedPiece(parentElementOfButton, validMoves);
+        } else if (this.squares[squareId] === null) {
+            this.handleClickOnEmptySquare(parentElementOfButton, squareId);
+        } else {
+            this.handleClickOnDifferentPiece(clickedPiece, squareId, parentElementOfButton, validMoves);
+        }
     }
 
     handleNoPieceSelected(clickedPiece, parentElementOfButton, validMoves) {
@@ -426,8 +429,6 @@ export class Board {
             return;
         }
 
-        // TODO: Possible check en Passant here??
-
         // If the move is valid, remove highlighting
         if (validMovesOfPrevious.includes(squareId)) {
             highlightElement(parentElementOfButton, null);
@@ -443,17 +444,9 @@ export class Board {
         } else {
             this.movePieceToEmpty(this.selectedElement, squareId);
         }
-
-        return;
     }
 
     handleClickOnDifferentPiece(clickedPiece, squareId, parentElementOfButton, validMoves) {
-        /* 
-                        Check if the move is valid
-                        If the move is valid
-                            - move the piece there
-                            - remove the highlighting
-                    */
         let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
 
         // Get the valid moves of the previously clicked element
@@ -464,30 +457,20 @@ export class Board {
             return;
         }
 
-        // Check if the user indicated they wanted to castle and if so perform the castle
-
-        let clickedPieceType = clickedPiece.type;
-        let previousPieceType = this.selectedElement.type;
-        let castlingPieces = ['rook', 'king'];
-        if (castlingPieces.includes(clickedPieceType) && castlingPieces.includes(previousPieceType)) {
-            if (this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
-                return;
-            }
-            if (previousPieceType !== clickedPieceType) {
-                if (previousPieceType === 'rook') {
-                    this.castle(this.selectedElement, clickedPiece);
-                } else {
-                    this.castle(clickedPiece, this.selectedElement);
-                }
+        // Check if the user indicated they wanted to castle and if so perform the castle if it is valid
+        if (this.isCastlingMove(clickedPiece)) {
+            if (this.selectedElement.type === 'rook') {
+                this.castle(this.selectedElement, clickedPiece);
+            } else {
+                this.castle(clickedPiece, this.selectedElement);
             }
 
-            // Remove highlighting
             highlightElement(previousParentElement, null);
             removeHighlightFromElements(validMovesOfPrevious);
 
             return;
         }
-
+        
         if (validMovesOfPrevious.includes(squareId)) {
 
             highlightElement(parentElementOfButton, null);  // BAK
@@ -522,5 +505,15 @@ export class Board {
 
         highlightElement(parentElementOfButton, 'yellow');
         addHighlightToElements(validMoves);
+    }
+
+    isCastlingMove(clickedPiece) {
+        let clickedPieceType = clickedPiece.type;
+        let previousPieceType = this.selectedElement.type;
+        let castlingPieces = ['rook', 'king'];
+        return castlingPieces.includes(clickedPieceType) && 
+               castlingPieces.includes(previousPieceType) && 
+               !this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade) && 
+               clickedPieceType != previousPieceType;
     }
 }
