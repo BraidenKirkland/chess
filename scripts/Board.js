@@ -107,12 +107,12 @@ export class Board {
     }
 
     castle(rook, king) {
-        if (!this.moveValidator.castlingAllowed(rook, king, this.squares)) {
+        if (!this.moveValidator.castlingAllowed(rook, king, this.squares, this.numMovesMade)) {
             return;
         }
 
-        let kingNumericPosition = [Number(getNumericPosition(king.squareId)[0]), Number(getNumericPosition(king.squareId)[1])];
-        let horizontalOffset = kingNumericPosition[0] - Number(getNumericPosition(rook.squareId)[0]);
+        let kingNumericPosition = getNumericPosition(king.squareId);
+        let horizontalOffset = kingNumericPosition[0] - getNumericPosition(rook.squareId)[0];
         let kingMovementUnits = horizontalOffset > 0 ? -2 : 2;
         let rookUnitsRelativeToKing = horizontalOffset > 0 ? 1 : -1;
 
@@ -126,7 +126,6 @@ export class Board {
         this.movePieceToEmpty(rook, newRookPosition, true);
         this.changeTurn();
     }
-
 
 
     enPassantTake(takingPawn, diagonalSquare) {
@@ -164,7 +163,7 @@ export class Board {
         let squareIdofPiece = pieceToMove.squareId.slice();
 
         // TODO: Check the list of valid moves
-        let validMoves = this.moveValidator.getValidMoves(squareIdofPiece, this.squares);
+        let validMoves = this.moveValidator.getValidMoves(squareIdofPiece, this.squares, this.numMovesMade);
 
         if (!validMoves.includes(newPosition) && !castling) {
             return;
@@ -240,7 +239,7 @@ export class Board {
         let victimSquareId = victimPiece.squareId.slice();
         let killingSquareId = killingPiece.squareId.slice();
 
-        if (this.moveValidator.moveCreatesCheck(killingPiece, this.squares, victimSquareId)) {
+        if (this.moveValidator.moveCreatesCheck(killingPiece, this.squares, victimSquareId, this.numMovesMade)) {
             return;
         }
 
@@ -319,14 +318,17 @@ export class Board {
     }
 
     addEventListenersForPieces() {
+        console.log('adding event listener for pieces')
         // Respond to click events on each button
         this.boardPieces.forEach(button => {
             button.addEventListener('click', (eventObject) => {
-                if (this.moveValidator.isCheckMate(this.turn, this.squares)) {
+                eventObject.stopPropagation();
+                
+                if (this.moveValidator.isCheckMate(this.turn, this.squares, this.numMovesMade)) {
                     return;
                 }
 
-                if (this.moveValidator.isStaleMate(this.turn, this.squares)) {
+                if (this.moveValidator.isStaleMate(this.turn, this.squares, this.numMovesMade)) {
                     return;
                 }
 
@@ -348,13 +350,13 @@ export class Board {
                 // Get validMoves of the clicked piece, if it was a piece
                 let validMoves = [];
                 if (clickedPiece !== null) {
-                    validMoves = this.moveValidator.getValidMoves(squareId, this.squares);
+                    validMoves = this.moveValidator.getValidMoves(squareId, this.squares, this.numMovesMade);
                 }
 
-                if (clickedPiece && this.moveValidator.inCheck(clickedPiece.color, this.squares)) {
-                    validMoves = validMoves.filter(move => this.moveValidator.moveRemovesCheck(clickedPiece, move, this.squares));
-                } else if (clickedPiece && !this.moveValidator.inCheck(clickedPiece.color, this.squares)) {
-                    validMoves = validMoves.filter(move => !this.moveValidator.moveCreatesCheck(clickedPiece, this.squares, move));
+                if (clickedPiece && this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
+                    validMoves = validMoves.filter(move => this.moveValidator.moveRemovesCheck(clickedPiece, move, this.squares, this.numMovesMade));
+                } else if (clickedPiece && !this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
+                    validMoves = validMoves.filter(move => !this.moveValidator.moveCreatesCheck(clickedPiece, this.squares, move, this.numMovesMade));
                 }
 
 
@@ -394,16 +396,16 @@ export class Board {
 
                     // Get previously selected button and valid moves of the previous button
                     let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
-                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares);
+                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
 
                     // Check if currently in check and if the move does not remove check
-                    if (this.moveValidator.inCheck(this.selectedElement.color, this.squares) && !this.moveValidator.moveRemovesCheck(this.selectedElement, squareId, this.squares)) {
+                    if (this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && !this.moveValidator.moveRemovesCheck(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
                         return;
                     }
 
                     // Check if moving piece creates check on king
                     // TODO: Make sure turns are maintained
-                    if (!this.moveValidator.inCheck(this.selectedElement.color, this.squares) && this.moveValidator.moveCreatesCheck(this.selectedElement, this.squares, squareId)) {
+                    if (!this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && this.moveValidator.moveCreatesCheck(this.selectedElement, this.squares, squareId, this.numMovesMade)) {
                         return;
                     }
 
@@ -440,7 +442,7 @@ export class Board {
                     let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
 
                     // Get the valid moves of the previously clicked element
-                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares);
+                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
 
                     // TODO: Possibly remove this?? -> not sure if this condition is even possible
                     if (this.selectedElement.color !== this.turn) {
@@ -453,7 +455,7 @@ export class Board {
                     let previousPieceType = this.selectedElement.type;
                     let castlingPieces = ['rook', 'king'];
                     if (castlingPieces.includes(clickedPieceType) && castlingPieces.includes(previousPieceType)) {
-                        if (this.moveValidator.inCheck(clickedPiece.color, this.squares)) {
+                        if (this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
                             return;
                         }
                         if (previousPieceType !== clickedPieceType) {

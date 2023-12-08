@@ -2,7 +2,7 @@ export const getNumericPosition = (regularPosition) => {
     const letters = 'abcdefgh';
     const numbers = '12345678';
 
-    return String(letters.indexOf(regularPosition[0])) + String(numbers.indexOf(regularPosition[1]));
+    return [letters.indexOf(regularPosition[0]), numbers.indexOf(regularPosition[1])];
 }
 
 /* e.g. 00 -> a1 , 77 -> h8 */

@@ -5,7 +5,7 @@ export class MoveValidator {
     validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
 
         // Cannot move to the square if it is occupied by a same color piece
-        if (squares[dstSquareId] !== null && squares[dstSquareId].color === piece.color) {
+        if (this.isOccupiedBySameColor(dstSquareId, piece, squares)) {
             return false;
         }
 
@@ -15,107 +15,106 @@ export class MoveValidator {
             return true;
         }
 
-        // Get the numeric id's of the source and destination squares
-        let srcSquareNumeric = [Number(getNumericPosition(srcSquareId)[0]), Number(getNumericPosition(srcSquareId)[1])];
-        let dstSquareIdNumeric = [Number(getNumericPosition(dstSquareId)[0]), Number(getNumericPosition(dstSquareId)[1])];
-
-        // Calculate the horizontal and vertical offsets
-        let horizontal = dstSquareIdNumeric[0] - srcSquareNumeric[0];
-        let vertical = dstSquareIdNumeric[1] - srcSquareNumeric[1];
-
-        let difference = [horizontal, vertical];
-        let verticalCounter = 1, horizontalCounter = 1;
-
-        // Check if destination square is below the current square
-        if (vertical < 0) {
-            verticalCounter = -1;
+        if(piece.type === 'pawn') {
+            return this.isValidPawnMove(srcSquareId, dstSquareId, piece, squares, numMovesMade);
         }
 
-        // Check if destination square is to the left of the current square
-        if (horizontal < 0) {
-            horizontalCounter = -1;
+        return this.isPathClear(srcSquareId, dstSquareId, squares)
+    }
+
+    isOccupiedBySameColor(dstSquareId, piece, squares) {
+        return squares[dstSquareId] !== null && squares[dstSquareId].color === piece.color;
+    }
+
+    isValidPawnMove(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+        const horizontal = srcX - dstX;
+        const vertical = srcY - dstY;
+
+        // Handle Diagonal Pawn Move
+        if (horizontal !== 0) {
+            return this.isPawnCaptureOrEnPassant(srcSquareId, dstSquareId, piece, squares, numMovesMade);
         }
 
-        // Check if the move is purely horizontal or vertical
-        if (vertical === 0) {
-            verticalCounter = 0;
-        }
-        if (horizontal === 0) {
-            horizontalCounter = 0;
-        }
+        // Handle Vertical Pawn Move
+        return this.isPawnVerticalMoveValid(srcSquareId, dstSquareId, piece, squares, vertical);
+    }
 
-        /* 
-            Special case for pawns
-            If the move has a horizontal component, then it must be a kill move.
-            This is only allowed if the destination square is occupied by an enemy piece
-         */
+    isPawnCaptureOrEnPassant(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+        if (piece.type !== 'pawn') return false;
 
-        // TODO: Possible check en Passant here??
-        if (piece.type === 'pawn' && horizontal !== 0) {
-            let dstSquare = getRegularPosition(dstSquareIdNumeric);
-            // The move is not allowd if the destination square has no piece or a piece of the same color
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
 
-            if (squares[dstSquare] === null && this.enPassantAllowed(piece, dstSquare, squares, numMovesMade)) {
+        const direction = piece.color === 'white' ? 1 : -1;
+        const verticalDistance = (dstY - srcY) * direction;
+        const horizontalDistance = Math.abs(dstX - srcX);
+
+        // Pawns capture diagonally
+        if (verticalDistance === 1 && horizontalDistance === 1) {
+            if (squares[dstSquareId] !== null && squares[dstSquareId].color !== piece.color) {
+                // Normal capture
                 return true;
-            } else if (squares[dstSquare] === null || squares[dstSquare].color === piece.color) {
-                return false;
+            } else if (this.enPassantAllowed(piece, dstSquareId, squares, numMovesMade)) {
+                // En passant capture
+                return true;
             }
-
-            return true;
         }
 
-        if (piece.type === 'pawn' && horizontal === 0) {
-            let dstSquare = getRegularPosition(dstSquareIdNumeric);
-            // The move is not allowd if the destination square is occupied by a piece of any color
-            if (squares[dstSquare] !== null) {
-                return false;
-            }
+        return false;
+    }
 
-            if (Math.abs(vertical) > 1) {
-                let intermediatePosition = [];
-                intermediatePosition[0] = srcSquareNumeric[0];  // no change
-                intermediatePosition[1] = (piece.color === 'white' ? srcSquareNumeric[1] + 1 : srcSquareNumeric[1] - 1);  // check the square directly in front of the pawn
-                let intermediateSquare = getRegularPosition(intermediatePosition);
-                if (squares[intermediateSquare] !== null) {
-                    return false;
-                }
-            }
+    isPawnVerticalMoveValid(srcSquareId, dstSquareId, piece, squares) {
+        if (piece.type !== 'pawn') return false;
 
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+
+        // Pawns can only move forward vertically
+        if (srcX !== dstX) return false;
+
+        const direction = piece.color === 'white' ? 1 : -1;
+        const verticalDistance = (dstY - srcY) * direction;
+
+        // Check for a valid one-square move or initial two-square move
+        if (verticalDistance === 1 && squares[dstSquareId] === null) {
             return true;
+        } else if (verticalDistance === 2 && piece.moveCount === 0 && squares[dstSquareId] === null) {
+            // Check the square directly in front of the pawn
+            const intermediateSquare = getRegularPosition([srcX, srcY + direction]);
+
+            return squares[intermediateSquare] === null;
         }
 
-        let intermediatePosition = [];
-        let intermediateSquare;
-        let enemyPiecesOnPath = 0;
+        return false;
+    }
+
+    isPathClear(srcSquareId, dstSquareId, squares) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+        const horizontal = dstX - srcX;
+        const vertical = dstY - srcY;
+
+        let verticalCounter = vertical < 0 ? -1 : 1;
+        let horizontalCounter = horizontal < 0 ? -1 : 1;
+        if (vertical === 0) verticalCounter = 0;
+        if (horizontal === 0) horizontalCounter = 0;
+
         for (let i = 1; i < Math.max(Math.abs(vertical), Math.abs(horizontal)); i++) {
+            const intermediateX = srcX + horizontalCounter * i;
+            const intermediateY = srcY + verticalCounter * i;
+            const intermediateSquare = getRegularPosition([intermediateX, intermediateY]);
 
-            intermediatePosition[0] = srcSquareNumeric[0] + horizontalCounter * i;
-            intermediatePosition[1] = srcSquareNumeric[1] + verticalCounter * i;
-            intermediateSquare = getRegularPosition(intermediatePosition);
-
-            if (squares[intermediateSquare] == null) {
-                continue;
-            }
-            if (squares[intermediateSquare].color === piece.color) {
+            if (squares[intermediateSquare] !== null) {
                 return false;
             }
-
-            // Track how many enemy pieces have been encountered on this path
-            // Only the first one encountered can be killed
-            if (squares[intermediateSquare].color !== piece.color) {
-                enemyPiecesOnPath++;
-            }
-        }
-
-        if (enemyPiecesOnPath > 0) {
-            return false;
         }
 
         return true;
     }
 
     enPassantAllowed(takingPawn, diagonalSquare, squares, numMovesMade) {
-
         let neighborSquare;
         if (takingPawn.color === 'white') {
             neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
@@ -131,31 +130,36 @@ export class MoveValidator {
 
         // Ensure the destination square is free
         if (squares[diagonalSquare] !== null) {
+            // console.log('failed check 2');
             return false;
         }
 
         // Rule One: The capturing pawn much have moved exactly three ranks
         if (takingPawn.ranksAdvanced !== 3) {
+            // console.log('failed check 3');
             return false;
         }
 
         // Rule Two: The captured pawn must have moved two squares in one move
         if (pieceOnNeighborSquare.firstMoveRank !== 2 && pieceOnNeighborSquare.moveCount !== 1) {
+            // console.log('failed check 4');
             return false;
         }
 
         // Rule Three: The captured pawn must have made the last move
         if (numMovesMade !== pieceOnNeighborSquare.numberOfMostRecentMove) {
+            // console.log('failed check 5');
             return false;
         }
 
+        // console.log('en passant is allowed')
         return true;
     }
 
     /* 
      Check to see if the king belonging to the input value of color is in check
  */
-    inCheck(color, squares) {
+    inCheck(color, squares, numMovesMade) {
 
         // If color is white, check all black pieces to see if they can kill the king and vice versa
 
@@ -189,7 +193,7 @@ export class MoveValidator {
 
         for (let i = 0; i < enemyPieces.length; i++) {
             enemyPiece = enemyPieces[i];
-            enemyPieceValidMoves = this.getValidMoves(enemyPiece.squareId, squares);
+            enemyPieceValidMoves = this.getValidMoves(enemyPiece.squareId, squares, numMovesMade);
 
             if (enemyPieceValidMoves.includes(kingSquareId)) {
                 return true;
@@ -204,7 +208,7 @@ export class MoveValidator {
 
         Assumption is that the king is already in check
     */
-    isCheckMate(color, squares) {
+    isCheckMate(color, squares, numMovesMade) {
 
         /* 
            For every piece of this color
@@ -217,7 +221,7 @@ export class MoveValidator {
         */
 
         // Adding this as assurance
-        if (!this.inCheck(color, squares)) {
+        if (!this.inCheck(color, squares, numMovesMade)) {
             return false;
         }
 
@@ -238,7 +242,7 @@ export class MoveValidator {
         for (let i = 0; i < friendlyPieces.length; i++) {
             currentPiece = friendlyPieces[i];
             // For each piece, get its valid moves
-            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares);
+            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares, numMovesMade);
 
             // Iterate through all valid moves for each piece
             for (let j = 0; j < validMoves.length; j++) {
@@ -258,7 +262,7 @@ export class MoveValidator {
 The king is already in check
 Does moving pieceToMove to newPosition remove the check on the king?
 */
-    moveRemovesCheck(pieceToMove, newPosition, squares) {
+    moveRemovesCheck(pieceToMove, newPosition, squares, numMovesMade) {
 
         let currentPositionOfPiece = pieceToMove.squareId;
         let piecePresentlyInNewPosition = squares[newPosition];
@@ -268,7 +272,7 @@ Does moving pieceToMove to newPosition remove the check on the king?
         squares[newPosition] = pieceToMove;
 
         // Perform the swap and run the inCheck function
-        let retVal = !this.inCheck(pieceToMove.color, squares);
+        let retVal = !this.inCheck(pieceToMove.color, squares, numMovesMade);
 
         // Set the board back to its original state
         squares[newPosition] = piecePresentlyInNewPosition;
@@ -278,16 +282,16 @@ Does moving pieceToMove to newPosition remove the check on the king?
         return retVal;
     }
 
-    getValidMoves(squareId, squares) {
+    getValidMoves(squareId, squares, numMovesMade) {
         let currentPiece = squares[squareId];
         let theoreticalMoves = this.theoreticalMoves(squareId, currentPiece);
-        let validMoves = theoreticalMoves.filter(dstSquareId => this.validMove(squareId, dstSquareId, currentPiece, squares, this.numMovesMade));
+        let validMoves = theoreticalMoves.filter(dstSquareId => this.validMove(squareId, dstSquareId, currentPiece, squares, numMovesMade));
         return validMoves;
     }
 
     theoreticalMoves(srcSquareId, piece) {
         const theoreticalMoves = [];
-        let startingPosition = [Number(getNumericPosition(srcSquareId)[0]), Number(getNumericPosition(srcSquareId)[1])];
+        let startingPosition = getNumericPosition(srcSquareId);
         let newPosition = [];
 
         let isPawn = piece.type === 'pawn';
@@ -298,10 +302,7 @@ Does moving pieceToMove to newPosition remove the check on the king?
                 newPosition[1] = startingPosition[1] + piece.moves[i][1] * j;
 
                 // Make sure the calculated position is on the board
-                if (newPosition[0] > 7 || newPosition[0] < 0) {
-                    break;
-                }
-                if (newPosition[1] > 7 || newPosition[1] < 0) {
+                if (! this.isPositionOnBoard(newPosition)) {
                     break;
                 }
                 // theoreticalMoves.push(newPosition.slice());
@@ -324,12 +325,10 @@ Does moving pieceToMove to newPosition remove the check on the king?
                 newPosition[1] = startingPosition[1] + (piece.color === 'white' ? fwdMoves[i][1] : -1 * fwdMoves[i][1]);
 
                 // Make sure the calculated position is on the board
-                if (newPosition[0] > 7 || newPosition[0] < 0) {
+                if (! this.isPositionOnBoard(newPosition)) {
                     continue;
                 }
-                if (newPosition[1] > 7 || newPosition[1] < 0) {
-                    continue;
-                }
+
                 theoreticalMoves.push(getRegularPosition(newPosition));
             }
 
@@ -337,11 +336,9 @@ Does moving pieceToMove to newPosition remove the check on the king?
                 // Reverse direction for black pieces
                 newPosition[0] = startingPosition[0] + (piece.color === 'white' ? killMoves[i][0] : -1 * killMoves[i][0]);
                 newPosition[1] = startingPosition[1] + (piece.color === 'white' ? killMoves[i][1] : -1 * killMoves[i][1]);
+
                 // Make sure the calculated position is on the board
-                if (newPosition[0] > 7 || newPosition[0] < 0) {
-                    continue;
-                }
-                if (newPosition[1] > 7 || newPosition[1] < 0) {
+                if (!this.isPositionOnBoard(newPosition)) {
                     continue;
                 }
 
@@ -360,7 +357,7 @@ Does moving pieceToMove to newPosition remove the check on the king?
 
         ASSUMES THAT THE MOVE IS VALID
     */
-    moveCreatesCheck(pieceToMove, squares, newPosition = null) {
+    moveCreatesCheck(pieceToMove, squares, newPosition = null, numMovesMade) {
         let retVal = false;
 
         // record the squareId of the piece
@@ -380,7 +377,7 @@ Does moving pieceToMove to newPosition remove the check on the king?
         squares[newPosition] = pieceToMove;
 
         // Check if this board arrangement results in a check
-        retVal = this.inCheck(pieceToMove.color, squares);
+        retVal = this.inCheck(pieceToMove.color, squares, numMovesMade);
 
         // Reset the board
         squares[currentPosition] = pieceToMove;
@@ -389,9 +386,9 @@ Does moving pieceToMove to newPosition remove the check on the king?
         return retVal;
     }
 
-    isStaleMate(color, squares) {
+    isStaleMate(color, squares, numMovesMade) {
         // Cannot be a stalemate if the piece is already in check
-        if (this.inCheck(color, squares)) {
+        if (this.inCheck(color, squares, numMovesMade)) {
             return false;
         }
 
@@ -411,7 +408,7 @@ Does moving pieceToMove to newPosition remove the check on the king?
             currentPiece = friendlyPieces[i];
 
             // For each piece, get its valid moves
-            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares);
+            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares, numMovesMade);
 
             // Iterate through all valid moves for each piece
             for (let j = 0; j < validMoves.length; j++) {
@@ -429,13 +426,13 @@ Does moving pieceToMove to newPosition remove the check on the king?
         return true;
     }
 
-    squareUnderAttack(squareId, opposingColor, squares) {
+    squareUnderAttack(squareId, opposingColor, squares, numMovesMade) {
 
         // TODO: Check the rules to see what to do if the opposing side is in check
         let validMoves;
         for (const [square, piece] of Object.entries(squares)) {
             if (piece !== null && piece.color === opposingColor) {
-                validMoves = this.getValidMoves(square, squares);
+                validMoves = this.getValidMoves(square, squares, numMovesMade);
                 // TODO: May need a special check for pawns trying to move forward as they are not "attacking"
                 //       However, they will be able to attack both diagonals
                 if (validMoves.includes(squareId)) {
@@ -447,7 +444,7 @@ Does moving pieceToMove to newPosition remove the check on the king?
         return false;
     }
 
-    castlingAllowed(rook, king, squares) {
+    castlingAllowed(rook, king, squares, numMovesMade) {
         if (rook.color !== king.color) {
             return false;
         }
@@ -459,12 +456,12 @@ Does moving pieceToMove to newPosition remove the check on the king?
             return false;
         }
 
-        if (this.inCheck(king.color, squares)) {
+        if (this.inCheck(king.color, squares, numMovesMade)) {
             return false;
         }
 
-        let rookNumericPosition = [Number(getNumericPosition(rook.squareId)[0]), Number(getNumericPosition(rook.squareId)[1])];
-        let kingNumericPosition = [Number(getNumericPosition(king.squareId)[0]), Number(getNumericPosition(king.squareId)[1])];
+        let rookNumericPosition = getNumericPosition(rook.squareId);
+        let kingNumericPosition = getNumericPosition(king.squareId);
 
         let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
         let counter = horizontalOffset > 0 ? 1 : -1;
@@ -481,6 +478,17 @@ Does moving pieceToMove to newPosition remove the check on the king?
         let newKingPosition = getRegularPosition([kingNumericPosition[0] + (horizontalOffset > 0 ? -2 : 2), kingNumericPosition[1]]);
         // Check if the destination square for the king is under attack
         if (this.squareUnderAttack(newKingPosition, opposingColor, squares)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    isPositionOnBoard(position) {
+        if (position[0] > 7 || position[0] < 0) {
+            return false;
+        }
+        if (position[1] > 7 || position[1] < 0) {
             return false;
         }
 
