@@ -295,45 +295,25 @@ export class MoveValidator {
         const validMoves = [];
         const startingPosition = getNumericPosition(srcSquareId);
         const fwdMoves = piece.getFwdMoves();
-        const newPosition = [];
-        
-        for (let i = 0; i < fwdMoves.length; i++) {
-            // Reverse direction for black pieces
-            newPosition[0] = startingPosition[0] + (piece.color === 'white' ? fwdMoves[i][0] : -1 * fwdMoves[i][0]);
-            newPosition[1] = startingPosition[1] + (piece.color === 'white' ? fwdMoves[i][1] : -1 * fwdMoves[i][1]);
-
-            // Make sure the calculated position is on the board
-            if (!this.isPositionOnBoard(newPosition)) {
-                continue;
-            }
-
-            let dstSquareId = getRegularPosition(newPosition);
-            if (!this.validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade)) {
-                continue
-            }
-
-            validMoves.push(getRegularPosition(newPosition));
-        }
-
         const killMoves = piece.moves;
 
-        for (let i = 0; i < killMoves.length; i++) {
-            // Reverse direction for black pieces
-            newPosition[0] = startingPosition[0] + (piece.color === 'white' ? killMoves[i][0] : -1 * killMoves[i][0]);
-            newPosition[1] = startingPosition[1] + (piece.color === 'white' ? killMoves[i][1] : -1 * killMoves[i][1]);
+        // Forward moves
+        fwdMoves.forEach(move => {
+            let newPosition = [
+                startingPosition[0] + (piece.color === 'white' ? move[0] : -move[0]),
+                startingPosition[1] + (piece.color === 'white' ? move[1] : -move[1])
+            ];
+            this.addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves);
+        });
 
-            // Make sure the calculated position is on the board
-            if (!this.isPositionOnBoard(newPosition)) {
-                continue;
-            }
-
-            let dstSquareId = getRegularPosition(newPosition);
-            if (!this.validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade)) {
-                continue
-            }
-
-            validMoves.push(getRegularPosition(newPosition));
-        }
+        // Kill moves
+        killMoves.forEach(move => {
+            let newPosition = [
+                startingPosition[0] + (piece.color === 'white' ? move[0] : -move[0]),
+                startingPosition[1] + (piece.color === 'white' ? move[1] : -move[1])
+            ];
+            this.addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves);
+        });
 
         return validMoves;
     }
@@ -341,34 +321,28 @@ export class MoveValidator {
     allValidNonPawnMoves(piece, srcSquareId, squares, numMovesMade) {
         const validMoves = [];
         const startingPosition = getNumericPosition(srcSquareId);
-        const newPosition = [];
 
-        for (let i = 0; i < piece.moves.length; i++) {
+        piece.moves.forEach(move => {
             for (let j = 1; j < 8; j++) {
-                newPosition[0] = startingPosition[0] + piece.moves[i][0] * j;
-                newPosition[1] = startingPosition[1] + piece.moves[i][1] * j;
-
-                // Make sure the calculated position is on the board
-                if (!this.isPositionOnBoard(newPosition)) {
-                    break;
-                }
-
-                let dstSquareId = getRegularPosition(newPosition);
-                if (!this.validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade)) {
-                    continue
-                }
-
-                validMoves.push(getRegularPosition(newPosition));
-
-                // If there is a limitation (e.g. king) only take the first move (j=1)
-                // This works for knights as well because there is only one possible move in each direction
-                if (piece.limitations) {
-                    break;
-                }
+                let newPosition = [
+                    startingPosition[0] + move[0] * j,
+                    startingPosition[1] + move[1] * j
+                ];
+                this.addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves);
+                if (piece.limitations) break;
             }
-        }
+        });
 
         return validMoves;
+    }
+
+    addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves) {
+        if (this.isPositionOnBoard(newPosition)) {
+            let dstSquareId = getRegularPosition(newPosition);
+            if (this.validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade)) {
+                validMoves.push(dstSquareId);
+            }
+        }
     }
     
     /* 
