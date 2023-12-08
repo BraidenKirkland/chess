@@ -319,4 +319,12 @@ export class Board {
                !this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade) && 
                clickedPieceType != previousPieceType;
     }
+
+    promotePiece(squareId, newPieceType, color) {
+        const promotedPiece = createPiece(color, newPieceType);
+        this.squares[squareId] = promotedPiece;
+
+        this.uiManager.updateSquareWithPromotedPiece(squareId, promotedPiece);
+        this.uiManager.hidePromotionMenu(color);
+    }
 }

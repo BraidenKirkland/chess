@@ -203,4 +203,17 @@ export class UIManager {
             }
         });
     }
+
+    updateSquareWithPromotedPiece(squareId, piece) {
+        const symbol = piecesToSymbols[piece.type][piece.color];
+        const squareButton = document.getElementsByClassName(squareId)[1];
+        squareButton.innerHTML = symbol;
+    }
+
+    hidePromotionMenu(color) {
+        const board = document.getElementById("board");
+        const promoMenu = document.getElementsByClassName(`${color}-promotion-menu`)[0];
+        board.style.visibility = "visible";
+        promoMenu.style.visibility = "hidden";
+    }
 }
