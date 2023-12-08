@@ -10,7 +10,7 @@ export class Board {
         this.uiManager = new UIManager();
         this.uiManager.setupEventListeners(this.handleButtonClick.bind(this));
         this.uiManager.setupPromotionEventListeners(this.handlePromotionSelection.bind(this));
-        
+
         // arrays to track pieces as they are killed
         this.whitePiecesKilled = [];
         this.blackPiecesKilled = [];
@@ -28,10 +28,6 @@ export class Board {
 
     changeTurn() {
         this.turn = (this.turn === 'white' ? 'black' : 'white');
-    }
-
-    getSquares() {
-        return this.squares;
     }
 
     // Function to initially assign a null value to every square on the board.
@@ -186,7 +182,7 @@ export class Board {
     }
 
     getClickedPiece(squareId) {
-        let clickedPiece = this.getSquares()[squareId];
+        let clickedPiece = this.squares[squareId];
         if (clickedPiece !== null) {
             clickedPiece.squareId = squareId;
         }
