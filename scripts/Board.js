@@ -8,6 +8,8 @@ import {
     getRegularPosition
 } from "./helpers.js";
 
+import { UIManager } from "./UIManager.js";
+
 const piecesToSymbols = {
     'pawn': {
         'white': '&#9817',
@@ -39,6 +41,7 @@ export class Board {
 
     constructor() {
         this.moveValidator = new MoveValidator();
+        this.uiManager = new UIManager();
         // arrays to track pieces as they are killed
         this.whitePiecesKilled = [];
         this.blackPiecesKilled = [];
@@ -318,7 +321,6 @@ export class Board {
     }
 
     addEventListenersForPieces() {
-        console.log('adding event listener for pieces')
         // Respond to click events on each button
         this.boardPieces.forEach(button => {
             button.addEventListener('click', (eventObject) => {
@@ -359,159 +361,166 @@ export class Board {
                     validMoves = validMoves.filter(move => !this.moveValidator.moveCreatesCheck(clickedPiece, this.squares, move, this.numMovesMade));
                 }
 
-
                 // Case 1 - No element currently selected
                 if (this.selectedElement === null) {
-
-                    // No element was currently selected and an empty square was clicked on
-                    if (clickedPiece === null) {
-                        return;
-                    }
-
-                    // Exit without highlighting if it is not that piece's turn
-                    if (clickedPiece.color !== this.turn) {
-                        return;
-                    }
-
-                    // Store the piece that was clicked on (to be used next click)
-                    this.selectedElement = clickedPiece;
-
-                    // Highlight square of clicked piece and its valid moves
-                    highlightElement(parentElementOfButton, 'pink');
-                    addHighlightToElements(validMoves);
+                    this.handleNoPieceSelected(clickedPiece, parentElementOfButton, validMoves);
 
                     // Case 2 - User clicked on the element already selected
                 } else if (squareId === this.selectedElement.squareId) {
-
-                    // Remove highlighting
-                    highlightElement(parentElementOfButton, null);
-                    removeHighlightFromElements(validMoves);
-
-                    // indicate no element selected
-                    this.selectedElement = null;
+                    this.handleClickOnSelectedPiece(parentElementOfButton, validMoves)
 
                     // Case 3 - A piece is already selected and the user clicked on an empty square
                 } else if (this.squares[squareId] === null) {
-
-
-                    // Get previously selected button and valid moves of the previous button
-                    let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
-                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
-
-                    // Check if currently in check and if the move does not remove check
-                    if (this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && !this.moveValidator.moveRemovesCheck(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
-                        return;
-                    }
-
-                    // Check if moving piece creates check on king
-                    // TODO: Make sure turns are maintained
-                    if (!this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && this.moveValidator.moveCreatesCheck(this.selectedElement, this.squares, squareId, this.numMovesMade)) {
-                        return;
-                    }
-
-                    // TODO: Possible check en Passant here??
-
-                    // If the move is valid, remove highlighting
-                    if (validMovesOfPrevious.includes(squareId)) {
-                        highlightElement(parentElementOfButton, null);
-                        highlightElement(previousParentElement, null);
-                        removeHighlightFromElements(validMovesOfPrevious);
-                    }
-
-                    // Move the piece to the empty square
-
-                    // Perform en Passant if it is allowed
-                    if (this.selectedElement.type === 'pawn' && this.moveValidator.enPassantAllowed(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
-                        this.enPassantTake(this.selectedElement, squareId);
-                    } else {
-                        this.movePieceToEmpty(this.selectedElement, squareId);
-                    }
-
-                    return;
+                    this.handleClickOnEmptySquare(parentElementOfButton, squareId) 
                 }
 
                 // Case 4 - An element is already selected and the user clicked on a different element
                 else {
+                    this.handleClickOnDifferentPiece(clickedPiece, squareId, parentElementOfButton, validMoves)
+                }
+            });
+        });
+    }
 
-                    /* 
+    handleNoPieceSelected(clickedPiece, parentElementOfButton, validMoves) {
+        // No element was currently selected and an empty square was clicked on
+        if (clickedPiece === null) {
+            return;
+        }
+
+        // Exit without highlighting if it is not that piece's turn
+        if (clickedPiece.color !== this.turn) {
+            return;
+        }
+
+        // Store the piece that was clicked on (to be used next click)
+        this.selectedElement = clickedPiece;
+
+        // Highlight square of clicked piece and its valid moves
+        highlightElement(parentElementOfButton, 'pink');
+        addHighlightToElements(validMoves);
+    }
+
+    handleClickOnSelectedPiece(parentElementOfButton, validMoves) {
+        // Remove highlighting
+        highlightElement(parentElementOfButton, null);
+        removeHighlightFromElements(validMoves);
+
+        // indicate no element selected
+        this.selectedElement = null;
+    }
+
+    handleClickOnEmptySquare(parentElementOfButton, squareId) {
+        // Get previously selected button and valid moves of the previous button
+        let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
+        let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
+
+        // Check if currently in check and if the move does not remove check
+        if (this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && !this.moveValidator.moveRemovesCheck(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
+            return;
+        }
+
+        // Check if moving piece creates check on king
+        // TODO: Make sure turns are maintained
+        if (!this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && this.moveValidator.moveCreatesCheck(this.selectedElement, this.squares, squareId, this.numMovesMade)) {
+            return;
+        }
+
+        // TODO: Possible check en Passant here??
+
+        // If the move is valid, remove highlighting
+        if (validMovesOfPrevious.includes(squareId)) {
+            highlightElement(parentElementOfButton, null);
+            highlightElement(previousParentElement, null);
+            removeHighlightFromElements(validMovesOfPrevious);
+        }
+
+        // Move the piece to the empty square
+
+        // Perform en Passant if it is allowed
+        if (this.selectedElement.type === 'pawn' && this.moveValidator.enPassantAllowed(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
+            this.enPassantTake(this.selectedElement, squareId);
+        } else {
+            this.movePieceToEmpty(this.selectedElement, squareId);
+        }
+
+        return;
+    }
+
+    handleClickOnDifferentPiece(clickedPiece, squareId, parentElementOfButton, validMoves) {
+        /* 
                         Check if the move is valid
                         If the move is valid
                             - move the piece there
                             - remove the highlighting
                     */
-                    let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
+        let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
 
-                    // Get the valid moves of the previously clicked element
-                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
+        // Get the valid moves of the previously clicked element
+        let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
 
-                    // TODO: Possibly remove this?? -> not sure if this condition is even possible
-                    if (this.selectedElement.color !== this.turn) {
-                        return;
-                    }
+        // TODO: Possibly remove this?? -> not sure if this condition is even possible
+        if (this.selectedElement.color !== this.turn) {
+            return;
+        }
 
-                    // Check if the user indicated they wanted to castle and if so perform the castle
+        // Check if the user indicated they wanted to castle and if so perform the castle
 
-                    let clickedPieceType = clickedPiece.type;
-                    let previousPieceType = this.selectedElement.type;
-                    let castlingPieces = ['rook', 'king'];
-                    if (castlingPieces.includes(clickedPieceType) && castlingPieces.includes(previousPieceType)) {
-                        if (this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
-                            return;
-                        }
-                        if (previousPieceType !== clickedPieceType) {
-                            if (previousPieceType === 'rook') {
-                                this.castle(this.selectedElement, clickedPiece);
-                            } else {
-                                this.castle(clickedPiece, this.selectedElement);
-                            }
-                        }
-
-                        // Remove highlighting
-                        highlightElement(previousParentElement, null);
-                        removeHighlightFromElements(validMovesOfPrevious);
-
-                        return;
-                    }
-
-                    if (validMovesOfPrevious.includes(squareId)) {
-
-                        highlightElement(parentElementOfButton, null);  // BAK
-                        this.takePiece(this.selectedElement, clickedPiece);
-
-                        // Change the turn - piece has been taken
-                        // TODO: Confirm that a piece has actually been taken before calling this function
-                        this.changeTurn();
-
-                        highlightElement(previousParentElement, null);
-                        removeHighlightFromElements(validMovesOfPrevious);
-
-                        this.selectedElement = null;  // BAK
-                        return;
-                    }
-
-                    // Clicked on the opposing color's piece that is not in a position to be taken
-                    if (clickedPiece.color !== this.turn) {
-                        return;
-                    }
-
-                    // Remove highlighting from the previously clicked element and its valid move squares
-                    highlightElement(previousParentElement, null);
-                    removeHighlightFromElements(validMovesOfPrevious);
-
-                    if (this.squares[squareId] == null) {
-                        this.selectedElement = null;
-                        return;
-                    }
-
-                    this.selectedElement = clickedPiece;
-
-                    highlightElement(parentElementOfButton, 'yellow');
-                    addHighlightToElements(validMoves);
-                }
-
+        let clickedPieceType = clickedPiece.type;
+        let previousPieceType = this.selectedElement.type;
+        let castlingPieces = ['rook', 'king'];
+        if (castlingPieces.includes(clickedPieceType) && castlingPieces.includes(previousPieceType)) {
+            if (this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
                 return;
+            }
+            if (previousPieceType !== clickedPieceType) {
+                if (previousPieceType === 'rook') {
+                    this.castle(this.selectedElement, clickedPiece);
+                } else {
+                    this.castle(clickedPiece, this.selectedElement);
+                }
+            }
 
-            });
-        });
+            // Remove highlighting
+            highlightElement(previousParentElement, null);
+            removeHighlightFromElements(validMovesOfPrevious);
+
+            return;
+        }
+
+        if (validMovesOfPrevious.includes(squareId)) {
+
+            highlightElement(parentElementOfButton, null);  // BAK
+            this.takePiece(this.selectedElement, clickedPiece);
+
+            // Change the turn - piece has been taken
+            // TODO: Confirm that a piece has actually been taken before calling this function
+            this.changeTurn();
+
+            highlightElement(previousParentElement, null);
+            removeHighlightFromElements(validMovesOfPrevious);
+
+            this.selectedElement = null;  // BAK
+            return;
+        }
+
+        // Clicked on the opposing color's piece that is not in a position to be taken
+        if (clickedPiece.color !== this.turn) {
+            return;
+        }
+
+        // Remove highlighting from the previously clicked element and its valid move squares
+        highlightElement(previousParentElement, null);
+        removeHighlightFromElements(validMovesOfPrevious);
+
+        if (this.squares[squareId] == null) {
+            this.selectedElement = null;
+            return;
+        }
+
+        this.selectedElement = clickedPiece;
+
+        highlightElement(parentElementOfButton, 'yellow');
+        addHighlightToElements(validMoves);
     }
 }
