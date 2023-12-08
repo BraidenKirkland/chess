@@ -13,25 +13,6 @@ export const getRegularPosition = (numericPosition) => {
     return String(letters[Number(numericPosition[0])] + numbers[Number(numericPosition[1])]);
 }
 
-export const highlightElement = (element, color) => {
-    element.style.backgroundColor = color;
-}
-
-
-export const addHighlightToElements = (moveList) => {
-    moveList.forEach((square) => {
-        let dstSqaure = document.querySelector('.' + square);
-        highlightElement(dstSqaure, 'yellow');
-    });
-}
-
-export const removeHighlightFromElements = (moveList) => {
-    moveList.forEach((square) => {
-        let dstSqaure = document.querySelector('.' + square);
-        highlightElement(dstSqaure, null);
-    });
-}
-
 export const piecesToSymbols = {
     'pawn': {
         'white': '&#9817',

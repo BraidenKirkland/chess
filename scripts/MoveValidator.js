@@ -192,6 +192,7 @@ export class MoveValidator {
             enemyPieceValidMoves = this.getValidMoves(enemyPiece.squareId, squares, numMovesMade);
 
             if (enemyPieceValidMoves.includes(kingSquareId)) {
+                console.log('IN CHECK !!!!!');
                 return true;
             }
         }
@@ -249,6 +250,8 @@ export class MoveValidator {
                 }
             }
         }
+
+        console.log('CHECKMATE !!!!!');
 
         // If this far, then it must be a checkmate
         return true;
@@ -418,6 +421,7 @@ export class MoveValidator {
             }
         }
 
+        console.log('IS STALEMATE !!!!');
         // No valid moves except those that create check
         return true;
     }

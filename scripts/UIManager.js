@@ -95,8 +95,7 @@ export class UIManager {
             document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
         }
 
-        // Get <td> and <button> of pawn to be removed
-        let takenTableCell = document.getElementsByClassName(neighborSquare)[0];
+        // Get <button> of pawn to be removed
         let takenButton = document.getElementsByClassName(neighborSquare)[1];
 
         takenButton.classList.add("empty");
@@ -104,8 +103,6 @@ export class UIManager {
         takenButton.removeAttribute("id");
         takenButton.innerHTML = null;
     }
-
-
 
     displayTakenPiece(victimPiece, whitePiecesKilled, blackPiecesKilled) {
         let takenPieceIcon = document.createElement('span');
@@ -150,4 +147,22 @@ export class UIManager {
         pieceSquareButton.classList.add(newPosition);
         pieceSquareButton.classList.remove(squareIdofPiece);
     }
+
+    showHighlightingForClickedPieceAndMoves(parentElementOfButton, buttonColor, validMoves) {
+        this.highlightElement(parentElementOfButton, buttonColor);
+        this.addHighlightToElements(validMoves);
+    }
+
+    removeHighlightForPiece(parentElementOfButton, validMoves) {
+        this.highlightElement(parentElementOfButton, null);
+        this.removeHighlightFromElements(validMoves);
+    }
+
+    removeHighlightingWhenMovingPieceToEmptySquare(parentElementOfButton, previousParentElement, validMovesOfPrevious) {
+        this.highlightElement(parentElementOfButton, null);
+        this.highlightElement(previousParentElement, null);
+        this.removeHighlightFromElements(validMovesOfPrevious);
+    }
+
+
 }
