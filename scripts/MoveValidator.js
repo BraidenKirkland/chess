@@ -130,29 +130,24 @@ export class MoveValidator {
 
         // Ensure the destination square is free
         if (squares[diagonalSquare] !== null) {
-            // console.log('failed check 2');
             return false;
         }
 
         // Rule One: The capturing pawn much have moved exactly three ranks
         if (takingPawn.ranksAdvanced !== 3) {
-            // console.log('failed check 3');
             return false;
         }
 
         // Rule Two: The captured pawn must have moved two squares in one move
         if (pieceOnNeighborSquare.firstMoveRank !== 2 && pieceOnNeighborSquare.moveCount !== 1) {
-            // console.log('failed check 4');
             return false;
         }
 
         // Rule Three: The captured pawn must have made the last move
         if (numMovesMade !== pieceOnNeighborSquare.numberOfMostRecentMove) {
-            // console.log('failed check 5');
             return false;
         }
 
-        // console.log('en passant is allowed')
         return true;
     }
 
