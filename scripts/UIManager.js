@@ -204,6 +204,20 @@ export class UIManager {
         });
     }
 
+    setupPromotionEventListeners(promotionCallback) {
+        const promotionMenuPieces = [...document.querySelectorAll(".promo")];
+
+        promotionMenuPieces.forEach(button => {
+            button.addEventListener('click', event => {
+                const importantClass = event.target.classList[1];
+                const [typeOfPiece, colorOfPiece] = importantClass.split("-");
+
+                // Invoke the callback function with the necessary information
+                promotionCallback(typeOfPiece, colorOfPiece);
+            });
+        });
+    }
+
     updateSquareWithPromotedPiece(squareId, piece) {
         const symbol = piecesToSymbols[piece.type][piece.color];
         const squareButton = document.getElementsByClassName(squareId)[1];

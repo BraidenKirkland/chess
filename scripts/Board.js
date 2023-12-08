@@ -9,6 +9,8 @@ export class Board {
         this.moveValidator = new MoveValidator();
         this.uiManager = new UIManager();
         this.uiManager.setupEventListeners(this.handleButtonClick.bind(this));
+        this.uiManager.setupPromotionEventListeners(this.handlePromotionSelection.bind(this));
+        
         // arrays to track pieces as they are killed
         this.whitePiecesKilled = [];
         this.blackPiecesKilled = [];
@@ -326,5 +328,20 @@ export class Board {
 
         this.uiManager.updateSquareWithPromotedPiece(squareId, promotedPiece);
         this.uiManager.hidePromotionMenu(color);
+    }
+
+    handlePromotionSelection(typeOfPiece, colorOfPiece) {
+        // Find the last moved piece
+        let lastPiece;
+        for (const [squareId, piece] of Object.entries(this.squares)) {
+            if (piece && piece.numberOfMostRecentMove === this.numMovesMade) {
+                lastPiece = { squareId, piece };
+                break;
+            }
+        }
+
+        if (lastPiece && lastPiece.piece.canPromote()) {
+            this.promotePiece(lastPiece.squareId, typeOfPiece, colorOfPiece);
+        }
     }
 }
