@@ -514,4 +514,32 @@ export class Board {
             });
         });
     }
+
+
+    enPassantTake(takingPawn, diagonalSquare) {
+        let takenPieceIcon = document.createElement('span');
+        let colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
+        takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
+
+        let neighborSquare;
+        if (takingPawn.color === 'white') {
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
+            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
+        } else {
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
+            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
+        }
+
+        // Get <td> and <button> of pawn to be removed
+        let takenTableCell = document.getElementsByClassName(neighborSquare)[0];
+        let takenButton = document.getElementsByClassName(neighborSquare)[1];
+
+        takenButton.classList.add("empty");
+        takenButton.classList.remove("piece");
+        takenButton.removeAttribute("id");
+        takenButton.innerHTML = null;
+
+        this.squares[neighborSquare] = null;
+    }
+
 }

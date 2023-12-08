@@ -39,9 +39,11 @@ export class UIManager {
         this.highlightSquare(squareId, ''); // Resetting the color
     }
 
-    updateSquaresAfterTake(squares, victimSquareId, killingSquareId) {
-        // Update squares object to reflect new pieces
+    getParentElementOfButton(squareId) {
+        return document.querySelector("." + squareId);
+    }
 
+    updateBoardAfterTake(victimSquareId, killingSquareId) {
         let dstSquareList = document.getElementsByClassName(victimSquareId);
         let dstSquareTableCell = dstSquareList[0];
         let dstSquareButton = dstSquareList[1];
@@ -80,6 +82,30 @@ export class UIManager {
         dstSquareButton.classList.add(killingSquareId);
         dstSquareButton.innerHTML = null;
     }
+
+    updateBoardAfterEnPassantTake(takingPawn, neighborSquare) {
+        let takenPieceIcon = document.createElement('span');
+        let colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
+        takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
+
+        // Updating UI for taken pieces list
+        if (takingPawn.color === 'white') {
+            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
+        } else {
+            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
+        }
+
+        // Get <td> and <button> of pawn to be removed
+        let takenTableCell = document.getElementsByClassName(neighborSquare)[0];
+        let takenButton = document.getElementsByClassName(neighborSquare)[1];
+
+        takenButton.classList.add("empty");
+        takenButton.classList.remove("piece");
+        takenButton.removeAttribute("id");
+        takenButton.innerHTML = null;
+    }
+
+
 
     displayTakenPiece(victimPiece, whitePiecesKilled, blackPiecesKilled) {
         let takenPieceIcon = document.createElement('span');

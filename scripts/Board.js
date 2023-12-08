@@ -1,7 +1,6 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
 import { MoveValidator } from "./MoveValidator.js";
 import { 
-    highlightElement, 
     addHighlightToElements, 
     removeHighlightFromElements,
     getNumericPosition,
@@ -9,7 +8,6 @@ import {
 } from "./helpers.js";
 
 import { UIManager } from "./UIManager.js";
-import { piecesToSymbols } from "./helpers.js";
 
 export class Board {
 
@@ -53,7 +51,7 @@ export class Board {
             }
         }
     }
-    
+
     addPiecesToBoard() {
         this.addPiecesOfColor('black');
         this.addPiecesOfColor('white');
@@ -91,33 +89,18 @@ export class Board {
     }
 
     enPassantTake(takingPawn, diagonalSquare) {
-
-        let takenPieceIcon = document.createElement('span');
-        let colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
-        takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
-
         let neighborSquare;
         if (takingPawn.color === 'white') {
             neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
-            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
         } else {
             neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
-            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
         }
 
         this.movePieceToEmpty(takingPawn, diagonalSquare);
-
-        // Get <td> and <button> of pawn to be removed
-        let takenTableCell = document.getElementsByClassName(neighborSquare)[0];
-        let takenButton = document.getElementsByClassName(neighborSquare)[1];
-
-        takenButton.classList.add("empty");
-        takenButton.classList.remove("piece");
-        takenButton.removeAttribute("id");
-        takenButton.innerHTML = null;
-
         this.squares[neighborSquare] = null;
+        this.uiManager.updateBoardAfterEnPassantTake(takingPawn, neighborSquare);
     }
+
 
     movePieceToEmpty(pieceToMove, newPosition, castling = false) {
         // Make a copy using slice()
@@ -174,7 +157,7 @@ export class Board {
         killingPiece.moveCount++;
         killingPiece.ranksAdvanced++;
 
-        this.uiManager.updateSquaresAfterTake(this.squares, victimSquareId, killingSquareId);
+        this.uiManager.updateBoardAfterTake(victimSquareId, killingSquareId);
         this.uiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
 
         if (killingPiece.canPromote()) {
@@ -198,7 +181,7 @@ export class Board {
 
         const squareId = this.getClickedSquareId(eventObject);
         const clickedPiece = this.getClickedPiece(squareId);
-        const parentElementOfButton = this.getParentElementOfButton(squareId);
+        const parentElementOfButton = this.uiManager.getParentElementOfButton(squareId);
         const validMoves = this.getValidMovesForPiece(clickedPiece, squareId);
 
         this.processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves);
@@ -219,10 +202,6 @@ export class Board {
             clickedPiece.squareId = squareId;
         }
         return clickedPiece;
-    }
-
-    getParentElementOfButton(squareId) {
-        return document.querySelector("." + squareId);
     }
 
     getValidMovesForPiece(clickedPiece, squareId) {
@@ -261,13 +240,13 @@ export class Board {
         this.selectedElement = clickedPiece;
 
         // Highlight square of clicked piece and its valid moves
-        highlightElement(parentElementOfButton, 'pink');
+        this.uiManager.highlightElement(parentElementOfButton, 'pink');
         addHighlightToElements(validMoves);
     }
 
     handleClickOnSelectedPiece(parentElementOfButton, validMoves) {
         // Remove highlighting
-        highlightElement(parentElementOfButton, null);
+        this.uiManager.highlightElement(parentElementOfButton, null);
         removeHighlightFromElements(validMoves);
 
         // indicate no element selected
@@ -292,8 +271,8 @@ export class Board {
 
         // If the move is valid, remove highlighting
         if (validMovesOfPrevious.includes(squareId)) {
-            highlightElement(parentElementOfButton, null);
-            highlightElement(previousParentElement, null);
+            this.uiManager.highlightElement(parentElementOfButton, null);
+            this.uiManager.highlightElement(previousParentElement, null);
             removeHighlightFromElements(validMovesOfPrevious);
         }
 
@@ -326,7 +305,7 @@ export class Board {
                 this.castle(clickedPiece, this.selectedElement);
             }
 
-            highlightElement(previousParentElement, null);
+            this.uiManager.highlightElement(previousParentElement, null);
             removeHighlightFromElements(validMovesOfPrevious);
 
             return;
@@ -334,14 +313,14 @@ export class Board {
         
         if (validMovesOfPrevious.includes(squareId)) {
 
-            highlightElement(parentElementOfButton, null);  // BAK
+            this.uiManager.highlightElement(parentElementOfButton, null);  // BAK
             this.takePiece(this.selectedElement, clickedPiece);
 
             // Change the turn - piece has been taken
             // TODO: Confirm that a piece has actually been taken before calling this function
             this.changeTurn();
 
-            highlightElement(previousParentElement, null);
+            this.uiManager.highlightElement(previousParentElement, null);
             removeHighlightFromElements(validMovesOfPrevious);
 
             this.selectedElement = null;  // BAK
@@ -354,7 +333,7 @@ export class Board {
         }
 
         // Remove highlighting from the previously clicked element and its valid move squares
-        highlightElement(previousParentElement, null);
+        this.uiManager.highlightElement(previousParentElement, null);
         removeHighlightFromElements(validMovesOfPrevious);
 
         if (this.squares[squareId] == null) {
@@ -364,7 +343,7 @@ export class Board {
 
         this.selectedElement = clickedPiece;
 
-        highlightElement(parentElementOfButton, 'yellow');
+        this.uiManager.highlightElement(parentElementOfButton, 'yellow');
         addHighlightToElements(validMoves);
     }
 
