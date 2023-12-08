@@ -9,33 +9,7 @@ import {
 } from "./helpers.js";
 
 import { UIManager } from "./UIManager.js";
-
-const piecesToSymbols = {
-    'pawn': {
-        'white': '&#9817',
-        'black': '&#9823'
-    },
-    'bishop': {
-        'white': '&#9815',
-        'black': '&#9821'
-    },
-    'knight': {
-        'white': '&#9816',
-        'black': '&#9822'
-    },
-    'queen': {
-        'white': '&#9813',
-        'black': '&#9819'
-    },
-    'king': {
-        'white': '&#9812',
-        'black': '&#9818'
-    },
-    'rook': {
-        'white': '&#9814',
-        'black': '&#9820'
-    }
-};
+import { piecesToSymbols } from "./helpers.js";
 
 export class Board {
 
@@ -131,7 +105,6 @@ export class Board {
         this.changeTurn();
     }
 
-
     enPassantTake(takingPawn, diagonalSquare) {
 
         let takenPieceIcon = document.createElement('span');
@@ -162,7 +135,6 @@ export class Board {
     }
 
     movePieceToEmpty(pieceToMove, newPosition, castling = false) {
-
         // Make a copy using slice()
         let squareIdofPiece = pieceToMove.squareId.slice();
 
@@ -173,49 +145,16 @@ export class Board {
             return;
         }
 
-        // Get table cell (<td>) and button elements for destination (empty) square
-        let dstSquareTableCell = document.getElementsByClassName(newPosition)[0];
-        let dstSquareButton = document.getElementsByClassName(newPosition)[1];
-
-        // Get table cell (<td>) and button elements for piece square
-        let pieceSquareTableCell = document.getElementsByClassName(squareIdofPiece)[0];
-        let pieceSquareButton = document.getElementsByClassName(squareIdofPiece)[1];
-
-        // Need to replace the children of the table cells
-
-        let dstSquareChildToReplace = [];
-        let pieceSquareChildToReplace = [];
-
-        for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
-            if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
-            }
-        }
-
-        // Replace the empty square's button with the piece's button
-        dstSquareTableCell.replaceChild(pieceSquareButton, dstSquareChildToReplace[0]);
-        pieceSquareTableCell.appendChild(dstSquareButton);
-
-        // Update the class list of the destination square button
-        dstSquareButton.classList.add(squareIdofPiece);
-        dstSquareButton.classList.remove(newPosition);
-
-        // Update the class list of the piece square button
-        pieceSquareButton.classList.add(newPosition);
-        pieceSquareButton.classList.remove(squareIdofPiece);
-
-        // Update the squares object
+        this.uiManager.updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece);
         this.squares[newPosition] = pieceToMove;
-        pieceToMove.squareId = newPosition;
         this.squares[squareIdofPiece] = null;
-
+        this.numMovesMade++;
         this.selectedElement = null;
 
+        pieceToMove.squareId = newPosition;
         pieceToMove.moveCount++;
-        this.numMovesMade++;
         pieceToMove.numberOfMostRecentMove = this.numMovesMade;
 
-        // TODO: Need to determine if the pawn moved two squares forward or one square forward
         if (pieceToMove.type === 'pawn') {
 
             let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
@@ -224,21 +163,15 @@ export class Board {
             if (pieceToMove.canPromote()) {
                 pieceToMove.promote();
             }
-
         }
-
-        // TODO: Check for pawn promotion
-
 
         this.changeTurn();
     }
 
     /* 
     Method to swap the killing piece with the piece being killed.
-    TODO: Remove old highlight from the piece that was killed
     */
     takePiece(killingPiece, victimPiece) {
-
         // Get the current square id of each piece
         let victimSquareId = victimPiece.squareId.slice();
         let killingSquareId = killingPiece.squareId.slice();
@@ -247,77 +180,20 @@ export class Board {
             return;
         }
 
-        if (killingPiece.type === 'pawn') {
-            killingPiece.moveCount++;
-        }
-
-        // Update squares object to reflect new pieces
+        this.numMovesMade++;
         this.squares[victimSquareId] = killingPiece;
         this.squares[killingSquareId] = null;
-
-        let dstSquareList = document.getElementsByClassName(victimSquareId);
-        let dstSquareTableCell = dstSquareList[0];
-        let dstSquareButton = dstSquareList[1];
-
-        let currentSquareList = document.getElementsByClassName(killingSquareId);
-        let currentSquareTableCell = currentSquareList[0];
-        let currentSquareButton = currentSquareList[1];
-
-        // Update the square id in the button's class
-        currentSquareButton.classList.remove(killingSquareId)
-        currentSquareButton.classList.add(victimSquareId);
-
-        let dstSquareChildToReplace = [];
-        let currentSquareChildToReplace = [];
-
-        for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
-            if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
-            }
-        }
-
-        for (let i = 0; i < currentSquareTableCell.childNodes.length; i++) {
-            if (currentSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                currentSquareChildToReplace.push(currentSquareTableCell.childNodes[i]);
-            }
-        }
-
-        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareChildToReplace[0]);
-        currentSquareTableCell.appendChild(dstSquareButton);
-
-        // Turn the victim piece into an empty button
-        dstSquareButton.removeAttribute("id");
-        dstSquareButton.classList.remove("piece");
-        dstSquareButton.classList.remove(victimSquareId);
-        dstSquareButton.classList.add("empty");
-        dstSquareButton.classList.add(killingSquareId);
-        dstSquareButton.innerHTML = null;
-
         killingPiece.squareId = victimSquareId;
-
-        let takenPieceIcon = document.createElement('span');
-        takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.type][victimPiece.color];
-
-        if (victimPiece.color === 'white') {
-    
-            this.whitePiecesKilled.push(victimPiece)
-            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
-        } else {
-            this.blackPiecesKilled.push(victimPiece);
-            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
-        }
-
-        this.numMovesMade++;
         killingPiece.numberOfMostRecentMove = this.numMovesMade;
         killingPiece.killCount++;
         killingPiece.moveCount++;
+        killingPiece.ranksAdvanced++;
 
-        if (killingPiece.type === 'pawn') {
-            killingPiece.ranksAdvanced++;
+        this.uiManager.updateSquaresAfterTake(this.squares, victimSquareId, killingSquareId);
+        this.uiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
 
-            if (killingPiece.canPromote()) {
-                killingPiece.promote();
-            }
+        if (killingPiece.canPromote()) {
+            killingPiece.promote();
         }
     }
 
@@ -508,9 +384,9 @@ export class Board {
     }
 
     isCastlingMove(clickedPiece) {
-        let clickedPieceType = clickedPiece.type;
-        let previousPieceType = this.selectedElement.type;
-        let castlingPieces = ['rook', 'king'];
+        const clickedPieceType = clickedPiece.type;
+        const previousPieceType = this.selectedElement.type;
+        const castlingPieces = ['rook', 'king'];
         return castlingPieces.includes(clickedPieceType) && 
                castlingPieces.includes(previousPieceType) && 
                !this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade) && 

@@ -5,6 +5,14 @@ export default class Piece {
         this.type = type;
         this.position = null;
         this.moveCount = 0;
+        this.killCount = 0;
+        // For en passant, this number must be exactly three for the capturing pawn
+        // If this number === 6 for pawns, they can be promoted
+        this.ranksAdvanced = 0;
+    }
+
+    canPromote() {
+        return this.ranksAdvanced === 6 && this.type === 'pawn';
     }
     
     getSymbol() {

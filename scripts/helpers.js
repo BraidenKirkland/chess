@@ -32,3 +32,30 @@ export const removeHighlightFromElements = (moveList) => {
     });
 }
 
+export const piecesToSymbols = {
+    'pawn': {
+        'white': '&#9817',
+        'black': '&#9823'
+    },
+    'bishop': {
+        'white': '&#9815',
+        'black': '&#9821'
+    },
+    'knight': {
+        'white': '&#9816',
+        'black': '&#9822'
+    },
+    'queen': {
+        'white': '&#9813',
+        'black': '&#9819'
+    },
+    'king': {
+        'white': '&#9812',
+        'black': '&#9818'
+    },
+    'rook': {
+        'white': '&#9814',
+        'black': '&#9820'
+    }
+};
+
