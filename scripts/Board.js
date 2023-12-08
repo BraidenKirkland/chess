@@ -25,9 +25,7 @@ export class Board {
         // Keep count of how many moves have been made throughout the entire game
         this.numMovesMade = 0;
 
-        /*  
-        keep track of each square on the board
-        */
+        // Keep track of each square on the board
         this.squares = {};
         this.createSquares();
         this.addPiecesToBoard();
@@ -44,10 +42,7 @@ export class Board {
         return this.squares;
     }
 
-    /* 
-        Function to initially assign a null value to 
-        every square on the this.
-    */
+    // Function to initially assign a null value to every square on the board.
     createSquares() {
         const letters = 'abcdefgh';
         const numbers = '12345678';
