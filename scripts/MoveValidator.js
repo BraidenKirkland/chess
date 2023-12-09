@@ -188,108 +188,60 @@ export class MoveValidator {
         }
     }
 
-    /* 
-     Check to see if the king belonging to the input value of color is in check
- */
     inCheck(color, squares, numMovesMade) {
-
-        // If color is white, check all black pieces to see if they can kill the king and vice versa
-
-        // 1. Get the position of the king
-        // 2. For each enemy piece
-        //     - Does the array of valid moves for that piece contain the king's square?
-        //        => Yes - return true
-        //    return false
-
-        let kingSquareId;
-        let enemyPieces = [];
+        const kingSquareId = this.getKingPosition(color, squares);
+        if (!kingSquareId) return false;
 
         for (const [squareId, piece] of Object.entries(squares)) {
-            if (piece === null) {
-                continue;
-            }
-
-            if (piece.color === color && piece.type === 'king') {
-                kingSquareId = squareId;
-                continue;
-            }
-
-            if (piece.color !== color) {
-                piece.squareId = squareId;
-                enemyPieces.push(piece);
-            }
-        }
-
-        let enemyPiece;
-        let enemyPieceValidMoves;
-
-        for (let i = 0; i < enemyPieces.length; i++) {
-            enemyPiece = enemyPieces[i];
-            enemyPieceValidMoves = this.getValidMoves(enemyPiece.squareId, squares, numMovesMade);
-
-            if (enemyPieceValidMoves.includes(kingSquareId)) {
-                console.log('IN CHECK !!!!!');
-                return true;
+            if (piece && piece.color !== color) {
+                const validMoves = this.getValidMoves(squareId, squares, numMovesMade);
+                if (validMoves.includes(kingSquareId)) {
+                    return true;
+                }
             }
         }
 
         return false;
     }
 
-    /* 
-        Check if 'color' has been checkmated
-
-        Assumption is that the king is already in check
-    */
-    isCheckMate(color, squares, numMovesMade) {
-
-        /* 
-           For every piece of this color
-                1. Get the valid moves for that piece
-                    For each move in valid moves
-                        if(moveRemovesCheck(piece, move)) 
-                            return false  -> check was removed
-                
-                2. return true -> none of the valid moves for any piece removes the check; therefore, checkmate
-        */
-
-        // Adding this as assurance
-        if (!this.inCheck(color, squares, numMovesMade)) {
-            return false;
+    getKingPosition(color, squares) {
+        for (const [squareId, piece] of Object.entries(squares)) {
+            if (piece && piece.color === color && piece.type === 'king') {
+                return squareId;
+            }
         }
+        return null;
+    }
 
-        let friendlyPieces = [];
-
+    getAllPiecesForColor(color, squares) {
+        const piecesForColor = [];
         for (const [squareId, piece] of Object.entries(squares)) {
 
             if (piece !== null && piece.color === color) {
                 piece.squareId = squareId;
-                friendlyPieces.push(piece)
+                piecesForColor.push(piece)
             }
         }
 
-        let currentPiece;
-        let move;
+        return piecesForColor;
+    }
 
-        // Iterate through all pieces of this color
-        for (let i = 0; i < friendlyPieces.length; i++) {
-            currentPiece = friendlyPieces[i];
-            // For each piece, get its valid moves
-            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares, numMovesMade);
+    // Check if 'color' has been checkmated
+    isCheckMate(color, squares, numMovesMade) {
+        // Adding this as assurance
+        if (!this.inCheck(color, squares, numMovesMade)) return false;
 
-            // Iterate through all valid moves for each piece
-            for (let j = 0; j < validMoves.length; j++) {
-                move = validMoves[j];
-                // Check whether moving this piece to one of its valid moves will remove the check on the king
-                if (this.moveRemovesCheck(currentPiece, move, squares)) {
-                    return false;
-                }
+        const piecesForColor = this.getAllPiecesForColor(color, squares);
+
+        for (const piece of piecesForColor) {
+            const validMoves = this.getValidMoves(piece.squareId, squares, numMovesMade);
+
+            for (const move of validMoves) {
+                if(this.moveRemovesCheck(piece, move, squares, numMovesMade)) return false
             }
         }
 
         console.log('CHECKMATE !!!!!');
-
-        // If this far, then it must be a checkmate
         return true;
     }
 
@@ -427,38 +379,17 @@ export class MoveValidator {
             return false;
         }
 
-        let friendlyPieces = [];
-        for (const [squareId, piece] of Object.entries(squares)) {
-            if (piece !== null && piece.color === color) {
-                piece.squareId = squareId;
-                friendlyPieces.push(piece)
+        const piecesForColor = this.getAllPiecesForColor(color, squares);
+
+        for(const piece of piecesForColor) {
+            const validMoves = this.getValidMoves(piece.squareId.slice(), squares, numMovesMade);
+
+            for(const move of validMoves) {
+                if(!this.moveCreatesCheck(piece, squares, move)) return false;
             }
         }
 
-        let currentPiece;
-        let move;
-
-        // Iterate through all pieces of this color
-        for (let i = 0; i < friendlyPieces.length; i++) {
-            currentPiece = friendlyPieces[i];
-
-            // For each piece, get its valid moves
-            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares, numMovesMade);
-
-            // Iterate through all valid moves for each piece
-            for (let j = 0; j < validMoves.length; j++) {
-                move = validMoves[j];
-                // Check whether moving this piece to one of its valid moves will create a check on the king
-                if (!this.moveCreatesCheck(currentPiece, squares, move)) {
-
-                    // If there exists a valid move for a piece of this color that does not result in check => no stalemate
-                    return false;
-                }
-            }
-        }
-
-        console.log('IS STALEMATE !!!!');
-        // No valid moves except those that create check
+        console.log('STALEMATE');
         return true;
     }
 
@@ -480,43 +411,55 @@ export class MoveValidator {
     }
 
     castlingAllowed(rook, king, squares, numMovesMade) {
-        if (rook.color !== king.color) {
+        if(!this.areCastlingPiecesEligible(king, rook)) {
             return false;
         }
 
-        let opposingColor = (king.color === 'white' ? 'black' : 'white');
-
-        // Castling is only allowed if neither the rook nor the king have moved
-        if (rook.moveCount !== 0 || king.moveCount !== 0) {
+        if(this.inCheck(king.color, squares, numMovesMade)) {
             return false;
         }
 
-        if (this.inCheck(king.color, squares, numMovesMade)) {
+        const rookPosition = getNumericPosition(rook.squareId);
+        const kingPosition = getNumericPosition(king.squareId);
+        const opposingColor = this.opposingColor(king.color);
+
+        if (!this.isPathBetweenKingAndRookClear(rookPosition, kingPosition, opposingColor, squares, numMovesMade)) {
             return false;
         }
 
-        let rookNumericPosition = getNumericPosition(rook.squareId);
-        let kingNumericPosition = getNumericPosition(king.squareId);
-
-        let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
-        let counter = horizontalOffset > 0 ? 1 : -1;
-
-        for (let i = rookNumericPosition[0] + counter; i !== kingNumericPosition[0]; i += counter) {
-            let intermediatePosition = getRegularPosition([i, rookNumericPosition[1]]);
-
-            // Check if intermediate squares are empty and not under attack
-            if (squares[intermediatePosition] !== null || this.squareUnderAttack(intermediatePosition, opposingColor, squares, numMovesMade)) {
-                return false;
-            }
-        }
-
-        let newKingPosition = getRegularPosition([kingNumericPosition[0] + (horizontalOffset > 0 ? -2 : 2), kingNumericPosition[1]]);
-        // Check if the destination square for the king is under attack
+        const newKingPosition = this.calculateNewKingPosition(kingPosition, rookPosition);
         if (this.squareUnderAttack(newKingPosition, opposingColor, squares, numMovesMade)) {
             return false;
         }
 
         return true;
+
+    }
+
+    areCastlingPiecesEligible(rook, king) {
+        return rook.color === king.color && rook.moveCount === 0 && king.moveCount === 0;
+    }
+
+    isPathBetweenKingAndRookClear(rookPosition, kingPosition, opposingColor, squares, numMovesMade) {
+        const horizontalDirection = kingPosition[0] > rookPosition[0] ? 1 : -1;
+        for (let x = rookPosition[0] + horizontalDirection; x !== kingPosition[0]; x += horizontalDirection) {
+            const intermediatePosition = getRegularPosition([x, rookPosition[1]]);
+            const squareUnderAttack = this.squareUnderAttack(intermediatePosition, opposingColor, squares, numMovesMade);
+
+            if (squares[intermediatePosition] !== null || squareUnderAttack) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    opposingColor(color) {
+        return color === 'white' ? 'black' : 'white';
+    }
+
+    calculateNewKingPosition(kingPosition, rookPosition) {
+        const horizontalOffset = kingPosition[0] > rookPosition[0] ? -2 : 2;
+        return getRegularPosition([kingPosition[0] + horizontalOffset, kingPosition[1]]);
     }
 
     isPositionOnBoard(position) {
