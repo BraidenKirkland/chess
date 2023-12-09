@@ -22,16 +22,20 @@ export class Board {
 
         // Keep track of each square on the board
         this.squares = {};
-        this.createSquares();
-        this.addPiecesToBoard();
+        this.initializeBoard();
     }
 
     changeTurn() {
         this.turn = (this.turn === 'white' ? 'black' : 'white');
     }
 
+    initializeBoard() {
+        this.initializeBoardSquares();
+        this.addPiecesToBoard();
+    }
+
     // Function to initially assign a null value to every square on the board.
-    createSquares() {
+    initializeBoardSquares() {
         const letters = 'abcdefgh';
         const numbers = '12345678';
 
@@ -50,10 +54,14 @@ export class Board {
     addPiecesOfColor(color) {
         const allPieces = [...document.querySelectorAll(`button[id$="${color}"]`)];
         allPieces.forEach(piece => {
-            let position = [...piece.classList][1];
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            this.squares[position] = createPiece(color, pieceType);
+            this.addPiece(piece, color);
         });
+    }
+
+    addPiece(pieceElement, color) {
+        let position = [...pieceElement.classList][1];
+        let pieceType = pieceElement.id.split('-')[0].replace(/\d/g, '');
+        this.squares[position] = createPiece(color, pieceType);
     }
 
     castle(rook, king) {
@@ -62,6 +70,15 @@ export class Board {
             return;
         }
 
+        const [newKingPosition, newRookPosition] = this.getNewKingAndRookPositions(rook, king);
+
+        // Move king and rook to new positions
+        this.movePieceToEmpty(king, newKingPosition, true);
+        this.movePieceToEmpty(rook, newRookPosition, true);
+        this.changeTurn();
+    }
+
+    getNewKingAndRookPositions(rook, king) {
         let kingNumericPosition = getNumericPosition(king.squareId);
         let horizontalOffset = kingNumericPosition[0] - getNumericPosition(rook.squareId)[0];
         let kingMovementUnits = horizontalOffset > 0 ? -2 : 2;
@@ -72,10 +89,7 @@ export class Board {
         let newKingPosition = getRegularPosition(kingNumericPosition);
         let newRookPosition = getRegularPosition([kingNumericPosition[0] + rookUnitsRelativeToKing, kingNumericPosition[1]]);
 
-        // Move king and rook to new positions
-        this.movePieceToEmpty(king, newKingPosition, true);
-        this.movePieceToEmpty(rook, newRookPosition, true);
-        this.changeTurn();
+        return [newKingPosition, newRookPosition];
     }
 
     enPassantTake(takingPawn, diagonalSquare) {
@@ -153,6 +167,8 @@ export class Board {
         if (killingPiece.canPromote()) {
             this.uiManager.showPromotionMenu(killingPiece.color)
         }
+
+        this.changeTurn();
 
         return true
     }
@@ -292,7 +308,6 @@ export class Board {
         if (validMovesOfPrevious.includes(squareId)) {
             if (this.takePiece(this.selectedElement, clickedPiece)) {
                 this.uiManager.removeHighlightForPiece(parentElementOfButton, validMoves)
-                this.changeTurn();
             }
 
             this.selectedElement = null;  // BAK
