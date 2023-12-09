@@ -226,13 +226,12 @@ export class MoveValidator {
         return piecesForColor;
     }
 
-    // Check if 'color' has been checkmated
+  
     isCheckMate(color, squares, numMovesMade) {
-        // Adding this as assurance
         if (!this.inCheck(color, squares, numMovesMade)) {
             return false;
         }
-        console.log('check 2')
+
         const piecesForColor = this.getAllPiecesForColor(color, squares);
 
         for (const piece of piecesForColor) {
@@ -240,7 +239,6 @@ export class MoveValidator {
 
             for (const move of validMoves) {
                 if(this.moveRemovesCheck(piece, move, squares, numMovesMade)) {
-                    console.log('no check mate');
                     return false
                 }
             }
@@ -328,14 +326,6 @@ export class MoveValidator {
         }
     }
     
-    /* 
-    Check if moving the input piece would result in a check on its color's king
-    TODO: The method is currently oversimplified. Need to consider where the piece is going 
-        to be moved to because it may kill the piece causing the check
-        **** maybe moveRemovesCheck() can handle this ???? ****
-
-        ASSUMES THAT THE MOVE IS VALID
-    */
     moveCreatesCheck(pieceToMove, squares, newPosition = null, numMovesMade) {
         let retVal = false;
 
@@ -388,7 +378,6 @@ export class MoveValidator {
     }
 
     squareUnderAttack(squareId, opposingColor, squares, numMovesMade) {
-        // TODO: Check the rules to see what to do if the opposing side is in check
         let validMoves;
         for (const [square, piece] of Object.entries(squares)) {
             if (piece !== null && piece.color === opposingColor) {
@@ -478,7 +467,7 @@ export class MoveValidator {
         return false;
     }
 
-    moveLeadsToCheck(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+    moveLeadsToCheck(srcSquareId, dstSquareId, piece, squares) {
         let originalPiece = squares[dstSquareId];
         let kingSquareId = this.getKingPosition(piece.color, squares);
         if (piece.type === 'king') {
@@ -509,7 +498,7 @@ export class MoveValidator {
         // Filter out moves that are not valid or lead to a check
         potentialMoves = potentialMoves.filter(dstSquareId =>
             this.validMove(squareId, dstSquareId, currentPiece, squares, numMovesMade) &&
-            !this.moveLeadsToCheck(squareId, dstSquareId, currentPiece, squares, numMovesMade)
+            !this.moveLeadsToCheck(squareId, dstSquareId, currentPiece, squares)
         );
 
         return potentialMoves;
@@ -520,7 +509,7 @@ export class MoveValidator {
             case 'knight':
                 return this.calculatePotentialKnightMoves(piece, squareId);
             case 'king':
-                return this.calculatePotentialKingMoves(piece, squareId, squares, numMovesMade);
+                return this.calculatePotentialKingMoves(piece, squareId);
             case 'queen':
                 return this.calculatePotentialQueenMoves(piece, squareId, squares, numMovesMade);
             case 'rook':
@@ -528,7 +517,7 @@ export class MoveValidator {
             case 'bishop':
                 return this.calculatePotentialBishopMoves(piece, squareId, squares, numMovesMade);
             default:
-                return this.calculatePawnPotentialMoves(piece, squareId, squares, numMovesMade);
+                return this.calculatePawnPotentialMoves(piece, squareId, squares);
         }
     }
 
@@ -547,7 +536,7 @@ export class MoveValidator {
         return moves;
     }
 
-    calculatePotentialKingMoves(king, squareId, squares, numMovesMade) {
+    calculatePotentialKingMoves(king, squareId) {
         let moves = [];
         const [x, y] = getNumericPosition(squareId);
 
@@ -562,19 +551,19 @@ export class MoveValidator {
         return moves;
     }
 
-    calculatePotentialRookMoves(rook, squareId, squares, numMovesMade) {
-        return this.calculatePotentialLinearMoves(rook, squareId, squares, numMovesMade);
+    calculatePotentialRookMoves(rook, squareId, squares) {
+        return this.calculatePotentialLinearMoves(rook, squareId, squares);
     }
 
-    calculatePotentialBishopMoves(bishop, squareId, squares, numMovesMade) {
-        return this.calculatePotentialLinearMoves(bishop, squareId, squares, numMovesMade);
+    calculatePotentialBishopMoves(bishop, squareId, squares) {
+        return this.calculatePotentialLinearMoves(bishop, squareId, squares);
     }
 
-    calculatePotentialQueenMoves(queen, squareId, squares, numMovesMade) {
-        return this.calculatePotentialLinearMoves(queen, squareId, squares, numMovesMade);
+    calculatePotentialQueenMoves(queen, squareId, squares) {
+        return this.calculatePotentialLinearMoves(queen, squareId, squares);
     }
 
-    calculatePotentialLinearMoves(piece, squareId, squares, numMovesMade) {
+    calculatePotentialLinearMoves(piece, squareId, squares) {
         let moves = [];
         const [x, y] = getNumericPosition(squareId);
 
@@ -602,7 +591,7 @@ export class MoveValidator {
     }
 
 
-    calculatePawnPotentialMoves(pawn, squareId, squares, numMovesMade) {
+    calculatePawnPotentialMoves(pawn, squareId, squares) {
         // For pawns, consider both forward moves and diagonal captures
         let moves = [];
 
@@ -633,40 +622,10 @@ export class MoveValidator {
         return moves;
     }
 
-    calculateOtherPiecePotentialMoves(piece, squareId, squares, numMovesMade) {
-        // For other pieces, use the movement patterns defined in their 'moves' property
-        let moves = [];
-        const [x, y] = getNumericPosition(squareId);
-
-        piece.moves.forEach(move => {
-            for (let j = 1; j < 8; j++) {
-                let newX = x + move[0] * j;
-                let newY = y + move[1] * j;
-                let newPosition = getRegularPosition([newX, newY]);
-
-                if (!this.isPositionOnBoard([newX, newY])) {
-                    break;
-                }
-
-                if (squares[newPosition]) {
-                    if (squares[newPosition].color !== piece.color) {
-                        moves.push(newPosition);
-                    }
-                    break;
-                } else {
-                    moves.push(newPosition);
-                }
-            }
-        });
-
-        return moves;
-    }
-
-
     isDirectAttack(srcSquareId, dstSquareId, attackingPiece, squares) {
         switch (attackingPiece.type) {
             case 'pawn':
-                return this.canPawnAttack(srcSquareId, dstSquareId, attackingPiece, squares);
+                return this.canPawnAttack(srcSquareId, dstSquareId, attackingPiece);
             case 'knight':
                 return this.canKnightAttack(srcSquareId, dstSquareId);
             case 'bishop':
@@ -682,7 +641,7 @@ export class MoveValidator {
         }
     }
 
-    canPawnAttack(srcSquareId, dstSquareId, piece, squares) {
+    canPawnAttack(srcSquareId, dstSquareId, piece) {
         const [srcX, srcY] = getNumericPosition(srcSquareId);
         const [dstX, dstY] = getNumericPosition(dstSquareId);
         const direction = piece.color === 'white' ? 1 : -1;
