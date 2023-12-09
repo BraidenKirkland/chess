@@ -229,15 +229,20 @@ export class MoveValidator {
     // Check if 'color' has been checkmated
     isCheckMate(color, squares, numMovesMade) {
         // Adding this as assurance
-        if (!this.inCheck(color, squares, numMovesMade)) return false;
-
+        if (!this.inCheck(color, squares, numMovesMade)) {
+            return false;
+        }
+        console.log('check 2')
         const piecesForColor = this.getAllPiecesForColor(color, squares);
 
         for (const piece of piecesForColor) {
             const validMoves = this.getValidMoves(piece.squareId, squares, numMovesMade);
 
             for (const move of validMoves) {
-                if(this.moveRemovesCheck(piece, move, squares, numMovesMade)) return false
+                if(this.moveRemovesCheck(piece, move, squares, numMovesMade)) {
+                    console.log('no check mate');
+                    return false
+                }
             }
         }
 
@@ -267,19 +272,6 @@ export class MoveValidator {
 
 
         return retVal;
-    }
-
-    getValidMoves(squareId, squares, numMovesMade) {
-        let currentPiece = squares[squareId];
-        if(!currentPiece) {
-            return [];
-        }
-
-        if(currentPiece.type === 'pawn') {
-            return this.allValidPawnMoves(currentPiece, squareId, squares, numMovesMade);
-        }
-
-        return this.allValidNonPawnMoves(currentPiece, squareId, squares, numMovesMade);
     }
 
     allValidPawnMoves(piece, srcSquareId, squares, numMovesMade) {
@@ -385,7 +377,9 @@ export class MoveValidator {
             const validMoves = this.getValidMoves(piece.squareId.slice(), squares, numMovesMade);
 
             for(const move of validMoves) {
-                if(!this.moveCreatesCheck(piece, squares, move)) return false;
+                if(!this.moveCreatesCheck(piece, squares, move)) {
+                    return false;
+                }
             }
         }
 
@@ -472,4 +466,266 @@ export class MoveValidator {
 
         return true;
     }
+
+    isSquareAttacked(squareId, color, squares) {
+        for (const [pos, piece] of Object.entries(squares)) {
+            if (piece && piece.color !== color) {
+                if (this.isDirectAttack(pos, squareId, piece, squares)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    moveLeadsToCheck(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+        let originalPiece = squares[dstSquareId];
+        let kingSquareId = this.getKingPosition(piece.color, squares);
+        if (piece.type === 'king') {
+            kingSquareId = dstSquareId;
+        }
+        let kingInCheck;
+
+        squares[dstSquareId] = piece;
+        squares[srcSquareId] = null;
+
+        kingInCheck = this.isSquareAttacked(kingSquareId, piece.color, squares);
+
+        squares[srcSquareId] = piece;
+        squares[dstSquareId] = originalPiece;
+
+        return kingInCheck;
+    }
+
+    getValidMoves(squareId, squares, numMovesMade) {
+        let currentPiece = squares[squareId];
+        if (!currentPiece) {
+            return [];
+        }
+
+        // First, get all theoretically valid moves for the piece
+        let potentialMoves = this.calculatePotentialMoves(currentPiece, squareId, squares, numMovesMade);
+
+        // Filter out moves that are not valid or lead to a check
+        potentialMoves = potentialMoves.filter(dstSquareId =>
+            this.validMove(squareId, dstSquareId, currentPiece, squares, numMovesMade) &&
+            !this.moveLeadsToCheck(squareId, dstSquareId, currentPiece, squares, numMovesMade)
+        );
+
+        return potentialMoves;
+    }
+
+    calculatePotentialMoves(piece, squareId, squares, numMovesMade) {
+        switch (piece.type) {
+            case 'knight':
+                return this.calculatePotentialKnightMoves(piece, squareId);
+            case 'king':
+                return this.calculatePotentialKingMoves(piece, squareId, squares, numMovesMade);
+            case 'queen':
+                return this.calculatePotentialQueenMoves(piece, squareId, squares, numMovesMade);
+            case 'rook':
+                return this.calculatePotentialRookMoves(piece, squareId, squares, numMovesMade);
+            case 'bishop':
+                return this.calculatePotentialBishopMoves(piece, squareId, squares, numMovesMade);
+            default:
+                return this.calculatePawnPotentialMoves(piece, squareId, squares, numMovesMade);
+        }
+    }
+
+    calculatePotentialKnightMoves(knight, squareId) {
+        const moves = [];
+        const [x, y] = getNumericPosition(squareId);
+
+        knight.moves.forEach(([dx, dy]) => {
+            let newX = x + dx;
+            let newY = y + dy;
+            if (this.isPositionOnBoard([newX, newY])) {
+                moves.push(getRegularPosition([newX, newY]));
+            }
+        });
+
+        return moves;
+    }
+
+    calculatePotentialKingMoves(king, squareId, squares, numMovesMade) {
+        let moves = [];
+        const [x, y] = getNumericPosition(squareId);
+
+        king.moves.forEach(([dx, dy]) => {
+            let newX = x + dx;
+            let newY = y + dy;
+            if (this.isPositionOnBoard([newX, newY])) {
+                moves.push(getRegularPosition([newX, newY]));
+            }
+        });
+
+        return moves;
+    }
+
+    calculatePotentialRookMoves(rook, squareId, squares, numMovesMade) {
+        return this.calculatePotentialLinearMoves(rook, squareId, squares, numMovesMade);
+    }
+
+    calculatePotentialBishopMoves(bishop, squareId, squares, numMovesMade) {
+        return this.calculatePotentialLinearMoves(bishop, squareId, squares, numMovesMade);
+    }
+
+    calculatePotentialQueenMoves(queen, squareId, squares, numMovesMade) {
+        return this.calculatePotentialLinearMoves(queen, squareId, squares, numMovesMade);
+    }
+
+    calculatePotentialLinearMoves(piece, squareId, squares, numMovesMade) {
+        let moves = [];
+        const [x, y] = getNumericPosition(squareId);
+
+        piece.moves.forEach(([dx, dy]) => {
+            for (let j = 1; j < 8; j++) {
+                let newX = x + dx * j;
+                let newY = y + dy * j;
+                if (!this.isPositionOnBoard([newX, newY])) {
+                    break;
+                }
+
+                let newPosition = getRegularPosition([newX, newY]);
+                if (squares[newPosition]) {
+                    if (squares[newPosition].color !== piece.color) {
+                        moves.push(newPosition);
+                    }
+                    break;
+                } else {
+                    moves.push(newPosition);
+                }
+            }
+        });
+
+        return moves;
+    }
+
+
+    calculatePawnPotentialMoves(pawn, squareId, squares, numMovesMade) {
+        // For pawns, consider both forward moves and diagonal captures
+        let moves = [];
+
+        // Forward moves
+        const [x, y] = getNumericPosition(squareId);
+        const direction = pawn.color === 'white' ? 1 : -1;
+        const frontSquare = getRegularPosition([x, y + direction]);
+        if (!squares[frontSquare]) {
+            moves.push(frontSquare);
+
+            // If the pawn is at its starting position, it can move two squares forward
+            if ((pawn.color === 'white' && y === 1) || (pawn.color === 'black' && y === 6)) {
+                const doubleFrontSquare = getRegularPosition([x, y + 2 * direction]);
+                if (!squares[doubleFrontSquare]) {
+                    moves.push(doubleFrontSquare);
+                }
+            }
+        }
+
+        // Diagonal captures
+        for (let dx of [-1, 1]) {
+            const captureSquare = getRegularPosition([x + dx, y + direction]);
+            if (squares[captureSquare] && squares[captureSquare].color !== pawn.color) {
+                moves.push(captureSquare);
+            }
+        }
+
+        return moves;
+    }
+
+    calculateOtherPiecePotentialMoves(piece, squareId, squares, numMovesMade) {
+        // For other pieces, use the movement patterns defined in their 'moves' property
+        let moves = [];
+        const [x, y] = getNumericPosition(squareId);
+
+        piece.moves.forEach(move => {
+            for (let j = 1; j < 8; j++) {
+                let newX = x + move[0] * j;
+                let newY = y + move[1] * j;
+                let newPosition = getRegularPosition([newX, newY]);
+
+                if (!this.isPositionOnBoard([newX, newY])) {
+                    break;
+                }
+
+                if (squares[newPosition]) {
+                    if (squares[newPosition].color !== piece.color) {
+                        moves.push(newPosition);
+                    }
+                    break;
+                } else {
+                    moves.push(newPosition);
+                }
+            }
+        });
+
+        return moves;
+    }
+
+
+    isDirectAttack(srcSquareId, dstSquareId, attackingPiece, squares) {
+        switch (attackingPiece.type) {
+            case 'pawn':
+                return this.canPawnAttack(srcSquareId, dstSquareId, attackingPiece, squares);
+            case 'knight':
+                return this.canKnightAttack(srcSquareId, dstSquareId);
+            case 'bishop':
+                return this.canBishopAttack(srcSquareId, dstSquareId, squares);
+            case 'rook':
+                return this.canRookAttack(srcSquareId, dstSquareId, squares);
+            case 'queen':
+                return this.canQueenAttack(srcSquareId, dstSquareId, squares);
+            case 'king':
+                return this.canKingAttack(srcSquareId, dstSquareId);
+            default:
+                return false;
+        }
+    }
+
+    canPawnAttack(srcSquareId, dstSquareId, piece, squares) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+        const direction = piece.color === 'white' ? 1 : -1;
+        const verticalDistance = (dstY - srcY) * direction;
+        const horizontalDistance = Math.abs(dstX - srcX);
+
+        return verticalDistance === 1 && horizontalDistance === 1;
+    }
+
+    canKnightAttack(srcSquareId, dstSquareId) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+        const dx = Math.abs(srcX - dstX);
+        const dy = Math.abs(srcY - dstY);
+
+        return (dx === 2 && dy === 1) || (dx === 1 && dy === 2);
+    }
+
+    canBishopAttack(srcSquareId, dstSquareId, squares) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+
+        return Math.abs(dstX - srcX) === Math.abs(dstY - srcY) && this.isDiagonalPathClear(srcX, srcY, dstX, dstY, squares);
+    }
+
+    canRookAttack(srcSquareId, dstSquareId, squares) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+
+        return (srcX === dstX || srcY === dstY) && this.isPathClear(srcSquareId, dstSquareId, squares);
+    }
+
+    canQueenAttack(srcSquareId, dstSquareId, squares) {
+        return this.canRookAttack(srcSquareId, dstSquareId, squares) || this.canBishopAttack(srcSquareId, dstSquareId, squares);
+    }
+
+    canKingAttack(srcSquareId, dstSquareId) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+        const dx = Math.abs(srcX - dstX);
+        const dy = Math.abs(srcY - dstY);
+
+        return dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0);
+    }
 }
+

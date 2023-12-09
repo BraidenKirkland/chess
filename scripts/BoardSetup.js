@@ -8,7 +8,7 @@ export class BoardSetup {
     }
 
     addClassesToBoardSquares() {
-        const letters = 'abcdefgh';
+        const letters = 'hgfedcba';
         const numbers = '12345678';
         const boardPositions = [...document.querySelectorAll('td')].reverse();
 
