@@ -93,16 +93,18 @@ export class Board {
     }
 
     enPassantTake(takingPawn, diagonalSquare) {
-        let neighborSquare;
-        if (takingPawn.color === 'white') {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
-        } else {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
-        }
-
+        const neighborSquare = this.getNeighborSquareForEnPassant(takingPawn, diagonalSquare);
         this.movePieceToEmpty(takingPawn, diagonalSquare);
         this.squares[neighborSquare] = null;
         this.uiManager.updateBoardAfterEnPassantTake(takingPawn, neighborSquare);
+    }
+
+    getNeighborSquareForEnPassant(takingPawn, diagonalSquare) {
+        if (takingPawn.color === 'white') {
+            return diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
+        }
+
+        return diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
     }
 
 
@@ -127,6 +129,11 @@ export class Board {
         pieceToMove.moveCount++;
         pieceToMove.numberOfMostRecentMove = this.numMovesMade;
 
+        this.handlePromotion(pieceToMove, newPosition, squareIdofPiece);
+        this.changeTurn();
+    }
+
+    handlePromotion(pieceToMove, newPosition, squareIdofPiece) {
         if (pieceToMove.type === 'pawn') {
 
             let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
@@ -136,8 +143,6 @@ export class Board {
                 this.uiManager.showPromotionMenu(pieceToMove.color)
             }
         }
-
-        this.changeTurn();
     }
 
     /* 
