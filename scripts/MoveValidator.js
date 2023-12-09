@@ -34,14 +34,14 @@ export class MoveValidator {
 
         // Handle Diagonal Pawn Move
         if (horizontal !== 0) {
-            return this.isPawnCaptureOrEnPassant(srcSquareId, dstSquareId, piece, squares, numMovesMade);
+            return this.isValidPawnDiagonalMove(srcSquareId, dstSquareId, piece, squares, numMovesMade);
         }
 
         // Handle Vertical Pawn Move
         return this.isPawnVerticalMoveValid(srcSquareId, dstSquareId, piece, squares, vertical);
     }
 
-    isPawnCaptureOrEnPassant(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+    isValidPawnDiagonalMove(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
         if (piece.type !== 'pawn') return false;
 
         const [srcX, srcY] = getNumericPosition(srcSquareId);
