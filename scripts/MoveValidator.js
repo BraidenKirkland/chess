@@ -91,24 +91,61 @@ export class MoveValidator {
     }
 
     isPathClear(srcSquareId, dstSquareId, squares) {
+        // Get positions
         const [srcX, srcY] = getNumericPosition(srcSquareId);
         const [dstX, dstY] = getNumericPosition(dstSquareId);
-        const horizontal = dstX - srcX;
-        const vertical = dstY - srcY;
 
-        let verticalCounter = vertical < 0 ? -1 : 1;
-        let horizontalCounter = horizontal < 0 ? -1 : 1;
-        if (vertical === 0) verticalCounter = 0;
-        if (horizontal === 0) horizontalCounter = 0;
+        // Determine the type of movement
+        const isHorizontal = srcY === dstY;
+        const isVertical = srcX === dstX;
+        const isDiagonal = Math.abs(dstX - srcX) === Math.abs(dstY - srcY);
 
-        for (let i = 1; i < Math.max(Math.abs(vertical), Math.abs(horizontal)); i++) {
-            const intermediateX = srcX + horizontalCounter * i;
-            const intermediateY = srcY + verticalCounter * i;
-            const intermediateSquare = getRegularPosition([intermediateX, intermediateY]);
+        // Call the appropriate method
+        if (isHorizontal) return this.isHorizontalPathClear(srcX, dstX, srcY, squares);
+        if (isVertical) return this.isVerticalPathClear(srcY, dstY, srcX, squares);
+        if (isDiagonal) return this.isDiagonalPathClear(srcX, srcY, dstX, dstY, squares);
 
-            if (squares[intermediateSquare] !== null) {
+        return false;
+    }
+
+    isHorizontalPathClear(srcX, dstX, y, squares) {
+        const start = Math.min(srcX, dstX) + 1;
+        const end = Math.max(srcX, dstX);
+
+        for (let x = start; x < end; x++) {
+            if (squares[getRegularPosition([x, y])] !== null) {
                 return false;
             }
+        }
+
+        return true;
+    }
+
+    isVerticalPathClear(srcY, dstY, x, squares) {
+        const start = Math.min(srcY, dstY) + 1;
+        const end = Math.max(srcY, dstY);
+
+        for (let y = start; y < end; y++) {
+            if (squares[getRegularPosition([x, y])] !== null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    isDiagonalPathClear(srcX, srcY, dstX, dstY, squares) {
+        const xDirection = dstX > srcX ? 1 : -1;
+        const yDirection = dstY > srcY ? 1 : -1;
+        let currentX = srcX + xDirection;
+        let currentY = srcY + yDirection;
+
+        while (currentX !== dstX && currentY !== dstY) {
+            if (squares[getRegularPosition([currentX, currentY])] !== null) {
+                return false;
+            }
+            currentX += xDirection;
+            currentY += yDirection;
         }
 
         return true;
