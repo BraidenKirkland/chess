@@ -112,13 +112,14 @@ export class Board {
         // Make a copy using slice()
         let squareIdofPiece = pieceToMove.squareId.slice();
 
-        // TODO: Check the list of valid moves
-        let validMoves = this.moveValidator.getValidMoves(squareIdofPiece, this.squares, this.numMovesMade);
+        if (!castling) {
+            const validMoves = this.moveValidator.getValidMoves(squareIdofPiece, this.squares, this.numMovesMade);
 
-        if (!validMoves.includes(newPosition) && !castling) {
-            return;
+            if (!validMoves.includes(newPosition)) {
+                return;
+            }
         }
-
+        
         this.uiManager.updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece);
         this.squares[newPosition] = pieceToMove;
         this.squares[squareIdofPiece] = null;
