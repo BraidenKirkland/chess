@@ -46,28 +46,3 @@ export default class Piece {
         return symbols[this.type][this.color];
     }
 }
-
-// class Piece {
-
-//     constructor(pieceType, color) {
-//         // Make a deep copy of each piece - important for determining available moves for pawns
-//         this.pieceType = Object.assign({}, pieces.find(piece => piece.name === pieceType));
-//         // this.pieceType = pieces.find(piece => piece.name === pieceType);
-//         this.color = color;
-//         this.squareId = null;
-//         this.moveCount = 0; // Add the move count here so each piece keeps its own separate count
-        
-//         // To track if the pawn moved one or two squares on its first move (for en passant)
-//         this.firstMoveRank = 0;
-
-//         // For en passant
-//         this.numberOfMostRecentMove = 0;
-
-//         // For en passant, this number must be exactly three for the capturing pawn
-//         // If this number === 6 for pawns, they can be promoted
-//         this.ranksAdvanced = 0;
-
-//         this.killCount = 0;
-//     }
-
-// }

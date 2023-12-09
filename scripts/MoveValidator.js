@@ -152,41 +152,40 @@ export class MoveValidator {
     }
 
     enPassantAllowed(takingPawn, diagonalSquare, squares, numMovesMade) {
-        let neighborSquare;
-        if (takingPawn.color === 'white') {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
+        const neighborSquare = this.getNeighborSquareForEnPassant(takingPawn, diagonalSquare);
+        const pieceOnNeighborSquare = squares[neighborSquare];
+
+        if (!pieceOnNeighborSquare || pieceOnNeighborSquare.type !== 'pawn' || pieceOnNeighborSquare.color === takingPawn.color) {
+            return false;
+        }
+
+        if (squares[diagonalSquare]) {
+            return false;
+        }
+
+        return this.isPawnAdvancedThreeRanks(takingPawn) &&
+               this.isCapturedPawnValidForEnPassant(pieceOnNeighborSquare) &&
+               this.isLastMoveByCapturedPawn(numMovesMade, pieceOnNeighborSquare);
+    }
+
+    isPawnAdvancedThreeRanks(pawn) {
+        return pawn.ranksAdvanced === 3;
+    }
+
+    isCapturedPawnValidForEnPassant(capturedPawn) {
+        return capturedPawn.ranksAdvanced === 2 && capturedPawn.moveCount === 1;
+    }
+
+    isLastMoveByCapturedPawn(numMovesMade, capturedPawn) {
+        return numMovesMade === capturedPawn.numberOfMostRecentMove;
+    }
+
+    getNeighborSquareForEnPassant(pawn, diagonalSquare) {
+        if (pawn.color === 'white') {
+            return diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
         } else {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
+            return diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
         }
-
-        // Ensure there is an enempy pawn directly beside 
-        let pieceOnNeighborSquare = squares[neighborSquare];
-        if (pieceOnNeighborSquare === null || pieceOnNeighborSquare.type !== 'pawn' || pieceOnNeighborSquare.color === takingPawn.color) {
-            return false;
-        }
-
-        // Ensure the destination square is free
-        if (squares[diagonalSquare] !== null) {
-            return false;
-        }
-
-        // Rule One: The capturing pawn much have moved exactly three ranks
-        if (takingPawn.ranksAdvanced !== 3) {
-            return false;
-        }
-
-        // Rule Two: The captured pawn must have moved two squares in one move
-        if (pieceOnNeighborSquare.firstMoveRank !== 2 && pieceOnNeighborSquare.moveCount !== 1) {
-            return false;
-        }
-
-        // TODO: Dec 7, 2023 - This might not cover every case
-        // Rule Three: The captured pawn must have made the last move
-        if (numMovesMade !== pieceOnNeighborSquare.numberOfMostRecentMove) {
-            return false;
-        }
-
-        return true;
     }
 
     /* 

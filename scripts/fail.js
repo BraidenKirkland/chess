@@ -1,545 +1,496 @@
-import { createPiece } from "./Pieces/PieceFactory.js"
-import { MoveValidator } from "./MoveValidator.js";
-import {
-    highlightElement,
-    addHighlightToElements,
-    removeHighlightFromElements,
-    getNumericPosition,
-    getRegularPosition
-} from "./helpers.js";
+import { getNumericPosition, getRegularPosition } from "./helpers.js";
 
-const piecesToSymbols = {
-    'pawn': {
-        'white': '&#9817',
-        'black': '&#9823'
-    },
-    'bishop': {
-        'white': '&#9815',
-        'black': '&#9821'
-    },
-    'knight': {
-        'white': '&#9816',
-        'black': '&#9822'
-    },
-    'queen': {
-        'white': '&#9813',
-        'black': '&#9819'
-    },
-    'king': {
-        'white': '&#9812',
-        'black': '&#9818'
-    },
-    'rook': {
-        'white': '&#9814',
-        'black': '&#9820'
+export class MoveValidator {
+
+    validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+
+        // Cannot move to the square if it is occupied by a same color piece
+        if (this.isOccupiedBySameColor(dstSquareId, piece, squares)) {
+            return false;
+        }
+
+        // The one and only check for the knight has already been passed
+        // This is because there is no need to check intermediate squares
+        if (piece.type === 'knight') {
+            return true;
+        }
+
+        if (piece.type === 'pawn') {
+            return this.isValidPawnMove(srcSquareId, dstSquareId, piece, squares, numMovesMade);
+        }
+
+        return this.isPathClear(srcSquareId, dstSquareId, squares)
     }
-};
 
-export class Board {
+    isOccupiedBySameColor(dstSquareId, piece, squares) {
+        return squares[dstSquareId] !== null && squares[dstSquareId].color === piece.color;
+    }
 
-    constructor() {
-        this.moveValidator = new MoveValidator();
-        // arrays to track pieces as they are killed
-        this.whitePiecesKilled = [];
-        this.blackPiecesKilled = [];
-        this.selectedElement = null;
-        this.turn = 'white';
+    isValidPawnMove(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+        const horizontal = srcX - dstX;
+        const vertical = srcY - dstY;
 
-        // Keep count of how many moves have been made throughout the entire game
-        this.numMovesMade = 0;
+        // Handle Diagonal Pawn Move
+        if (horizontal !== 0) {
+            return this.isPawnCaptureOrEnPassant(srcSquareId, dstSquareId, piece, squares, numMovesMade);
+        }
 
-        /*  
-        keep track of each square on the board
+        // Handle Vertical Pawn Move
+        return this.isPawnVerticalMoveValid(srcSquareId, dstSquareId, piece, squares, vertical);
+    }
+
+    isPawnCaptureOrEnPassant(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
+        if (piece.type !== 'pawn') return false;
+
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+
+        const direction = piece.color === 'white' ? 1 : -1;
+        const verticalDistance = (dstY - srcY) * direction;
+        const horizontalDistance = Math.abs(dstX - srcX);
+
+        // Pawns capture diagonally
+        if (verticalDistance === 1 && horizontalDistance === 1) {
+            if (squares[dstSquareId] !== null && squares[dstSquareId].color !== piece.color) {
+                // Normal capture
+                return true;
+            } else if (this.enPassantAllowed(piece, dstSquareId, squares, numMovesMade)) {
+                // En passant capture
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    isPawnVerticalMoveValid(srcSquareId, dstSquareId, piece, squares) {
+        if (piece.type !== 'pawn') return false;
+
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+
+        // Pawns can only move forward vertically
+        if (srcX !== dstX) return false;
+
+        const direction = piece.color === 'white' ? 1 : -1;
+        const verticalDistance = (dstY - srcY) * direction;
+
+        // Check for a valid one-square move or initial two-square move
+        if (verticalDistance === 1 && squares[dstSquareId] === null) {
+            return true;
+        } else if (verticalDistance === 2 && piece.moveCount === 0 && squares[dstSquareId] === null) {
+            // Check the square directly in front of the pawn
+            const intermediateSquare = getRegularPosition([srcX, srcY + direction]);
+
+            return squares[intermediateSquare] === null;
+        }
+
+        return false;
+    }
+
+    isPathClear(srcSquareId, dstSquareId, squares) {
+        const [srcX, srcY] = getNumericPosition(srcSquareId);
+        const [dstX, dstY] = getNumericPosition(dstSquareId);
+        const horizontal = dstX - srcX;
+        const vertical = dstY - srcY;
+
+        let verticalCounter = vertical < 0 ? -1 : 1;
+        let horizontalCounter = horizontal < 0 ? -1 : 1;
+        if (vertical === 0) verticalCounter = 0;
+        if (horizontal === 0) horizontalCounter = 0;
+
+        for (let i = 1; i < Math.max(Math.abs(vertical), Math.abs(horizontal)); i++) {
+            const intermediateX = srcX + horizontalCounter * i;
+            const intermediateY = srcY + verticalCounter * i;
+            const intermediateSquare = getRegularPosition([intermediateX, intermediateY]);
+
+            if (squares[intermediateSquare] !== null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    enPassantAllowed(takingPawn, diagonalSquare, squares, numMovesMade) {
+        let neighborSquare;
+        if (takingPawn.color === 'white') {
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
+        } else {
+            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
+        }
+
+        // Ensure there is an enempy pawn directly beside 
+        let pieceOnNeighborSquare = squares[neighborSquare];
+        if (pieceOnNeighborSquare === null || pieceOnNeighborSquare.type !== 'pawn' || pieceOnNeighborSquare.color === takingPawn.color) {
+            return false;
+        }
+
+        // Ensure the destination square is free
+        if (squares[diagonalSquare] !== null) {
+            return false;
+        }
+
+        // Rule One: The capturing pawn much have moved exactly three ranks
+        if (takingPawn.ranksAdvanced !== 3) {
+            return false;
+        }
+
+        // Rule Two: The captured pawn must have moved two squares in one move
+        if (pieceOnNeighborSquare.firstMoveRank !== 2 && pieceOnNeighborSquare.moveCount !== 1) {
+            return false;
+        }
+
+        // TODO: Dec 7, 2023 - This might not cover every case
+        // Rule Three: The captured pawn must have made the last move
+        if (numMovesMade !== pieceOnNeighborSquare.numberOfMostRecentMove) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /* 
+     Check to see if the king belonging to the input value of color is in check
+ */
+    inCheck(color, squares, numMovesMade) {
+
+        // If color is white, check all black pieces to see if they can kill the king and vice versa
+
+        // 1. Get the position of the king
+        // 2. For each enemy piece
+        //     - Does the array of valid moves for that piece contain the king's square?
+        //        => Yes - return true
+        //    return false
+
+        let kingSquareId;
+        let enemyPieces = [];
+
+        for (const [squareId, piece] of Object.entries(squares)) {
+            if (piece === null) {
+                continue;
+            }
+
+            if (piece.color === color && piece.type === 'king') {
+                kingSquareId = squareId;
+                continue;
+            }
+
+            if (piece.color !== color) {
+                piece.squareId = squareId;
+                enemyPieces.push(piece);
+            }
+        }
+
+        let enemyPiece;
+        let enemyPieceValidMoves;
+
+        for (let i = 0; i < enemyPieces.length; i++) {
+            enemyPiece = enemyPieces[i];
+            enemyPieceValidMoves = this.getValidMoves(enemyPiece.squareId, squares, numMovesMade);
+
+            if (enemyPieceValidMoves.includes(kingSquareId)) {
+                console.log('IN CHECK !!!!!');
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /* 
+        Check if 'color' has been checkmated
+
+        Assumption is that the king is already in check
+    */
+    isCheckMate(color, squares, numMovesMade) {
+
+        /* 
+           For every piece of this color
+                1. Get the valid moves for that piece
+                    For each move in valid moves
+                        if(moveRemovesCheck(piece, move)) 
+                            return false  -> check was removed
+                
+                2. return true -> none of the valid moves for any piece removes the check; therefore, checkmate
         */
-        this.squares = {};
-        this.createSquares();
-        this.addPiecesToBoard();
-        this.boardPieces = [...document.querySelectorAll(".piece, .empty")];
 
-        this.addEventListenersForPieces();
-    }
+        // Adding this as assurance
+        if (!this.inCheck(color, squares, numMovesMade)) {
+            return false;
+        }
 
-    changeTurn() {
-        this.turn = (this.turn === 'white' ? 'black' : 'white');
-    }
+        let friendlyPieces = [];
 
-    getSquares() {
-        return this.squares;
+        for (const [squareId, piece] of Object.entries(squares)) {
+
+            if (piece !== null && piece.color === color) {
+                piece.squareId = squareId;
+                friendlyPieces.push(piece)
+            }
+        }
+
+        let currentPiece;
+        let move;
+
+        // Iterate through all pieces of this color
+        for (let i = 0; i < friendlyPieces.length; i++) {
+            currentPiece = friendlyPieces[i];
+            // For each piece, get its valid moves
+            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares, numMovesMade);
+
+            // Iterate through all valid moves for each piece
+            for (let j = 0; j < validMoves.length; j++) {
+                move = validMoves[j];
+                // Check whether moving this piece to one of its valid moves will remove the check on the king
+                if (this.moveRemovesCheck(currentPiece, move, squares)) {
+                    return false;
+                }
+            }
+        }
+
+        console.log('CHECKMATE !!!!!');
+
+        // If this far, then it must be a checkmate
+        return true;
     }
 
     /* 
-        Function to initially assign a null value to 
-        every square on the this.
+        The king is already in check
+        Does moving pieceToMove to newPosition remove the check on the king?
     */
-    createSquares() {
-        const letters = 'abcdefgh';
-        const numbers = '12345678';
+    moveRemovesCheck(pieceToMove, newPosition, squares, numMovesMade) {
 
-        for (let i = 0; i < letters.length; i++) {
-            for (let j = 0; j < numbers.length; j++) {
-                this.squares[letters[i] + numbers[j]] = null;
+        let currentPositionOfPiece = pieceToMove.squareId;
+        let piecePresentlyInNewPosition = squares[newPosition];
+
+        // Alter the board temporarily
+        squares[currentPositionOfPiece] = null;
+        squares[newPosition] = pieceToMove;
+
+        // Perform the swap and run the inCheck function
+        let retVal = !this.inCheck(pieceToMove.color, squares, numMovesMade);
+
+        // Set the board back to its original state
+        squares[newPosition] = piecePresentlyInNewPosition;
+        squares[currentPositionOfPiece] = pieceToMove;
+
+
+        return retVal;
+    }
+
+    getValidMoves(squareId, squares, numMovesMade) {
+        let currentPiece = squares[squareId];
+        if (!currentPiece) {
+            return [];
+        }
+
+        if (currentPiece.type === 'pawn') {
+            return this.allValidPawnMoves(currentPiece, squareId, squares, numMovesMade);
+        }
+
+        return this.allValidNonPawnMoves(currentPiece, squareId, squares, numMovesMade);
+    }
+
+    allValidPawnMoves(piece, srcSquareId, squares, numMovesMade) {
+        const validMoves = [];
+        const startingPosition = getNumericPosition(srcSquareId);
+        const fwdMoves = piece.getFwdMoves();
+        const killMoves = piece.moves;
+
+        // Forward moves
+        fwdMoves.forEach(move => {
+            let newPosition = [
+                startingPosition[0] + (piece.color === 'white' ? move[0] : -move[0]),
+                startingPosition[1] + (piece.color === 'white' ? move[1] : -move[1])
+            ];
+            this.addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves);
+        });
+
+        // Kill moves
+        killMoves.forEach(move => {
+            let newPosition = [
+                startingPosition[0] + (piece.color === 'white' ? move[0] : -move[0]),
+                startingPosition[1] + (piece.color === 'white' ? move[1] : -move[1])
+            ];
+            this.addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves);
+        });
+
+        return validMoves;
+    }
+
+    allValidNonPawnMoves(piece, srcSquareId, squares, numMovesMade) {
+        const validMoves = [];
+        const startingPosition = getNumericPosition(srcSquareId);
+
+        piece.moves.forEach(move => {
+            for (let j = 1; j < 8; j++) {
+                let newPosition = [
+                    startingPosition[0] + move[0] * j,
+                    startingPosition[1] + move[1] * j
+                ];
+                this.addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves);
+                if (piece.limitations) break;
+            }
+        });
+
+        return validMoves;
+    }
+
+    addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves) {
+        if (this.isPositionOnBoard(newPosition)) {
+            let dstSquareId = getRegularPosition(newPosition);
+            if (this.validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade)) {
+                validMoves.push(dstSquareId);
             }
         }
     }
 
-    addPiecesToBoard() {
-        const allBlackPieces = [...document.querySelectorAll('button[id$="black"]')];
-        allBlackPieces.forEach(piece => {
+    /* 
+    Check if moving the input piece would result in a check on its color's king
+    TODO: The method is currently oversimplified. Need to consider where the piece is going 
+        to be moved to because it may kill the piece causing the check
+        **** maybe moveRemovesCheck() can handle this ???? ****
 
-            // Get position of piece from element class
-            let position = [...piece.classList][1];
-            // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            // mark this position as occupied by a black piece
-            this.squares[position] = createPiece('black', pieceType);
-        });
+        ASSUMES THAT THE MOVE IS VALID
+    */
+    moveCreatesCheck(pieceToMove, squares, newPosition = null, numMovesMade) {
+        let retVal = false;
 
-        const allWhitePieces = [...document.querySelectorAll('button[id$="white"]')];
-        allWhitePieces.forEach(piece => {
+        // record the squareId of the piece
+        let currentPosition = pieceToMove.squareId;
 
-            // Get position of piece from element class
-            let position = [...piece.classList][1];
-            // Extract piece info from element id
-            let pieceType = piece.id.split('-')[0].replace(/\d/g, '');
-            // mark this position as occupied by a white piece
-            this.squares[position] = createPiece('white', pieceType);
-        });
-    }
+        // temporarily remove the piece from the board
+        squares[currentPosition] = null;
 
-    castle(rook, king) {
-        if (!this.moveValidator.castlingAllowed(rook, king, this.squares, this.numMovesMade)) {
-            return;
+        let piecePresentlyInNewPosition = null;
+
+        // When a piece currently occupies the new position
+        // Replace it with the piece that is being moved
+        if (newPosition !== null && squares[newPosition] !== null) {
+            piecePresentlyInNewPosition = squares[newPosition];
         }
 
+        squares[newPosition] = pieceToMove;
+
+        // Check if this board arrangement results in a check
+        retVal = this.inCheck(pieceToMove.color, squares, numMovesMade);
+
+        // Reset the board
+        squares[currentPosition] = pieceToMove;
+        squares[newPosition] = piecePresentlyInNewPosition;
+
+        return retVal;
+    }
+
+    isStaleMate(color, squares, numMovesMade) {
+        // Cannot be a stalemate if the piece is already in check
+        if (this.inCheck(color, squares, numMovesMade)) {
+            return false;
+        }
+
+        let friendlyPieces = [];
+        for (const [squareId, piece] of Object.entries(squares)) {
+            if (piece !== null && piece.color === color) {
+                piece.squareId = squareId;
+                friendlyPieces.push(piece)
+            }
+        }
+
+        let currentPiece;
+        let move;
+
+        // Iterate through all pieces of this color
+        for (let i = 0; i < friendlyPieces.length; i++) {
+            currentPiece = friendlyPieces[i];
+
+            // For each piece, get its valid moves
+            let validMoves = this.getValidMoves(currentPiece.squareId.slice(), squares, numMovesMade);
+
+            // Iterate through all valid moves for each piece
+            for (let j = 0; j < validMoves.length; j++) {
+                move = validMoves[j];
+                // Check whether moving this piece to one of its valid moves will create a check on the king
+                if (!this.moveCreatesCheck(currentPiece, squares, move)) {
+
+                    // If there exists a valid move for a piece of this color that does not result in check => no stalemate
+                    return false;
+                }
+            }
+        }
+
+        console.log('IS STALEMATE !!!!');
+        // No valid moves except those that create check
+        return true;
+    }
+
+    squareUnderAttack(squareId, opposingColor, squares, numMovesMade) {
+        // TODO: Check the rules to see what to do if the opposing side is in check
+        let validMoves;
+        for (const [square, piece] of Object.entries(squares)) {
+            if (piece !== null && piece.color === opposingColor) {
+                validMoves = this.getValidMoves(square, squares, numMovesMade);
+                // TODO: May need a special check for pawns trying to move forward as they are not "attacking"
+                //       However, they will be able to attack both diagonals
+                if (validMoves.includes(squareId)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    castlingAllowed(rook, king, squares, numMovesMade) {
+        if (rook.color !== king.color) {
+            return false;
+        }
+
+        let opposingColor = (king.color === 'white' ? 'black' : 'white');
+
+        // Castling is only allowed if neither the rook nor the king have moved
+        if (rook.moveCount !== 0 || king.moveCount !== 0) {
+            return false;
+        }
+
+        if (this.inCheck(king.color, squares, numMovesMade)) {
+            return false;
+        }
+
+        let rookNumericPosition = getNumericPosition(rook.squareId);
         let kingNumericPosition = getNumericPosition(king.squareId);
-        let horizontalOffset = kingNumericPosition[0] - getNumericPosition(rook.squareId)[0];
-        let kingMovementUnits = horizontalOffset > 0 ? -2 : 2;
-        let rookUnitsRelativeToKing = horizontalOffset > 0 ? 1 : -1;
 
-        // Calculate new positions for king and rook
-        kingNumericPosition[0] += kingMovementUnits;
-        let newKingPosition = getRegularPosition(kingNumericPosition);
-        let newRookPosition = getRegularPosition([kingNumericPosition[0] + rookUnitsRelativeToKing, kingNumericPosition[1]]);
+        let horizontalOffset = kingNumericPosition[0] - rookNumericPosition[0];
+        let counter = horizontalOffset > 0 ? 1 : -1;
 
-        // Move king and rook to new positions
-        this.movePieceToEmpty(king, newKingPosition, true);
-        this.movePieceToEmpty(rook, newRookPosition, true);
-        this.changeTurn();
-    }
+        for (let i = rookNumericPosition[0] + counter; i !== kingNumericPosition[0]; i += counter) {
+            let intermediatePosition = getRegularPosition([i, rookNumericPosition[1]]);
 
-
-    enPassantTake(takingPawn, diagonalSquare) {
-
-        let takenPieceIcon = document.createElement('span');
-        let colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
-        takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
-
-        let neighborSquare;
-        if (takingPawn.color === 'white') {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
-            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
-        } else {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
-            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
-        }
-
-        this.movePieceToEmpty(takingPawn, diagonalSquare);
-
-        // Get <td> and <button> of pawn to be removed
-        let takenTableCell = document.getElementsByClassName(neighborSquare)[0];
-        let takenButton = document.getElementsByClassName(neighborSquare)[1];
-
-        takenButton.classList.add("empty");
-        takenButton.classList.remove("piece");
-        takenButton.removeAttribute("id");
-        takenButton.innerHTML = null;
-
-        this.squares[neighborSquare] = null;
-    }
-
-    movePieceToEmpty(pieceToMove, newPosition, castling = false) {
-
-        // Make a copy using slice()
-        let squareIdofPiece = pieceToMove.squareId.slice();
-
-        // TODO: Check the list of valid moves
-        let validMoves = this.moveValidator.getValidMoves(squareIdofPiece, this.squares, this.numMovesMade);
-
-        if (!validMoves.includes(newPosition) && !castling) {
-            return;
-        }
-
-        // Get table cell (<td>) and button elements for destination (empty) square
-        let dstSquareTableCell = document.getElementsByClassName(newPosition)[0];
-        let dstSquareButton = document.getElementsByClassName(newPosition)[1];
-
-        // Get table cell (<td>) and button elements for piece square
-        let pieceSquareTableCell = document.getElementsByClassName(squareIdofPiece)[0];
-        let pieceSquareButton = document.getElementsByClassName(squareIdofPiece)[1];
-
-        // Need to replace the children of the table cells
-
-        let dstSquareChildToReplace = [];
-        let pieceSquareChildToReplace = [];
-
-        for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
-            if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
+            // Check if intermediate squares are empty and not under attack
+            if (squares[intermediatePosition] !== null || this.squareUnderAttack(intermediatePosition, opposingColor, squares, numMovesMade)) {
+                return false;
             }
         }
 
-        // Replace the empty square's button with the piece's button
-        dstSquareTableCell.replaceChild(pieceSquareButton, dstSquareChildToReplace[0]);
-        pieceSquareTableCell.appendChild(dstSquareButton);
-
-        // Update the class list of the destination square button
-        dstSquareButton.classList.add(squareIdofPiece);
-        dstSquareButton.classList.remove(newPosition);
-
-        // Update the class list of the piece square button
-        pieceSquareButton.classList.add(newPosition);
-        pieceSquareButton.classList.remove(squareIdofPiece);
-
-        // Update the squares object
-        this.squares[newPosition] = pieceToMove;
-        pieceToMove.squareId = newPosition;
-        this.squares[squareIdofPiece] = null;
-
-        this.selectedElement = null;
-
-        pieceToMove.moveCount++;
-        this.numMovesMade++;
-        pieceToMove.numberOfMostRecentMove = this.numMovesMade;
-
-        // TODO: Need to determine if the pawn moved two squares forward or one square forward
-        if (pieceToMove.type === 'pawn') {
-
-            let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
-            pieceToMove.ranksAdvanced += verticalDistance;
-
-            if (pieceToMove.canPromote()) {
-                pieceToMove.promote();
-            }
-
+        let newKingPosition = getRegularPosition([kingNumericPosition[0] + (horizontalOffset > 0 ? -2 : 2), kingNumericPosition[1]]);
+        // Check if the destination square for the king is under attack
+        if (this.squareUnderAttack(newKingPosition, opposingColor, squares, numMovesMade)) {
+            return false;
         }
 
-        // TODO: Check for pawn promotion
-
-
-        this.changeTurn();
+        return true;
     }
 
-    /* 
-    Method to swap the killing piece with the piece being killed.
-    TODO: Remove old highlight from the piece that was killed
-    */
-    takePiece(killingPiece, victimPiece) {
-
-        // Get the current square id of each piece
-        let victimSquareId = victimPiece.squareId.slice();
-        let killingSquareId = killingPiece.squareId.slice();
-
-        if (this.moveValidator.moveCreatesCheck(killingPiece, this.squares, victimSquareId, this.numMovesMade)) {
-            return;
+    isPositionOnBoard(position) {
+        if (position[0] > 7 || position[0] < 0) {
+            return false;
+        }
+        if (position[1] > 7 || position[1] < 0) {
+            return false;
         }
 
-        if (killingPiece.type === 'pawn') {
-            killingPiece.moveCount++;
-        }
-
-        // Update squares object to reflect new pieces
-        this.squares[victimSquareId] = killingPiece;
-        this.squares[killingSquareId] = null;
-
-        let dstSquareList = document.getElementsByClassName(victimSquareId);
-        let dstSquareTableCell = dstSquareList[0];
-        let dstSquareButton = dstSquareList[1];
-
-        let currentSquareList = document.getElementsByClassName(killingSquareId);
-        let currentSquareTableCell = currentSquareList[0];
-        let currentSquareButton = currentSquareList[1];
-
-        // Update the square id in the button's class
-        currentSquareButton.classList.remove(killingSquareId)
-        currentSquareButton.classList.add(victimSquareId);
-
-        let dstSquareChildToReplace = [];
-        let currentSquareChildToReplace = [];
-
-        for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
-            if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
-            }
-        }
-
-        for (let i = 0; i < currentSquareTableCell.childNodes.length; i++) {
-            if (currentSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                currentSquareChildToReplace.push(currentSquareTableCell.childNodes[i]);
-            }
-        }
-
-        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareChildToReplace[0]);
-        currentSquareTableCell.appendChild(dstSquareButton);
-
-        // Turn the victim piece into an empty button
-        dstSquareButton.removeAttribute("id");
-        dstSquareButton.classList.remove("piece");
-        dstSquareButton.classList.remove(victimSquareId);
-        dstSquareButton.classList.add("empty");
-        dstSquareButton.classList.add(killingSquareId);
-        dstSquareButton.innerHTML = null;
-
-        killingPiece.squareId = victimSquareId;
-
-        let takenPieceIcon = document.createElement('span');
-        takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.type][victimPiece.color];
-
-        if (victimPiece.color === 'white') {
-
-            this.whitePiecesKilled.push(victimPiece)
-            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
-        } else {
-            this.blackPiecesKilled.push(victimPiece);
-            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
-        }
-
-        this.numMovesMade++;
-        killingPiece.numberOfMostRecentMove = this.numMovesMade;
-        killingPiece.killCount++;
-        killingPiece.moveCount++;
-
-        if (killingPiece.type === 'pawn') {
-            killingPiece.ranksAdvanced++;
-
-            if (killingPiece.canPromote()) {
-                killingPiece.promote();
-            }
-        }
+        return true;
     }
-
-    addEventListenersForPieces() {
-        console.log('adding event listener for pieces')
-        // Respond to click events on each button
-        this.boardPieces.forEach(button => {
-            button.addEventListener('click', (eventObject) => {
-                eventObject.stopPropagation();
-
-                if (this.moveValidator.isCheckMate(this.turn, this.squares, this.numMovesMade)) {
-                    return;
-                }
-
-                if (this.moveValidator.isStaleMate(this.turn, this.squares, this.numMovesMade)) {
-                    return;
-                }
-
-                // Get ID of the clicked square
-                let squareId = eventObject.target.classList[1];
-
-                // Determine if the square clicked contains a piece
-                let clickedPiece = this.getSquares()[squareId];
-                if (clickedPiece !== null) {
-                    clickedPiece.squareId = squareId;
-                }
-
-
-                // This is the <td> which is the parent of the button that was clicked
-                let parentElementOfButton = document.querySelector("." + squareId);
-
-                // Need to get valid moves of previous (if there was a previous)
-
-                // Get validMoves of the clicked piece, if it was a piece
-                let validMoves = [];
-                if (clickedPiece !== null) {
-                    validMoves = this.moveValidator.getValidMoves(squareId, this.squares, this.numMovesMade);
-                }
-
-                if (clickedPiece && this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
-                    validMoves = validMoves.filter(move => this.moveValidator.moveRemovesCheck(clickedPiece, move, this.squares, this.numMovesMade));
-                } else if (clickedPiece && !this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
-                    validMoves = validMoves.filter(move => !this.moveValidator.moveCreatesCheck(clickedPiece, this.squares, move, this.numMovesMade));
-                }
-
-
-                // Case 1 - No element currently selected
-                if (this.selectedElement === null) {
-
-                    // No element was currently selected and an empty square was clicked on
-                    if (clickedPiece === null) {
-                        return;
-                    }
-
-                    // Exit without highlighting if it is not that piece's turn
-                    if (clickedPiece.color !== this.turn) {
-                        return;
-                    }
-
-                    // Store the piece that was clicked on (to be used next click)
-                    this.selectedElement = clickedPiece;
-
-                    // Highlight square of clicked piece and its valid moves
-                    highlightElement(parentElementOfButton, 'pink');
-                    addHighlightToElements(validMoves);
-
-                    // Case 2 - User clicked on the element already selected
-                } else if (squareId === this.selectedElement.squareId) {
-
-                    // Remove highlighting
-                    highlightElement(parentElementOfButton, null);
-                    removeHighlightFromElements(validMoves);
-
-                    // indicate no element selected
-                    this.selectedElement = null;
-
-                    // Case 3 - A piece is already selected and the user clicked on an empty square
-                } else if (this.squares[squareId] === null) {
-
-
-                    // Get previously selected button and valid moves of the previous button
-                    let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
-                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
-
-                    // Check if currently in check and if the move does not remove check
-                    if (this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && !this.moveValidator.moveRemovesCheck(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
-                        return;
-                    }
-
-                    // Check if moving piece creates check on king
-                    // TODO: Make sure turns are maintained
-                    if (!this.moveValidator.inCheck(this.selectedElement.color, this.squares, this.numMovesMade) && this.moveValidator.moveCreatesCheck(this.selectedElement, this.squares, squareId, this.numMovesMade)) {
-                        return;
-                    }
-
-                    // TODO: Possible check en Passant here??
-
-                    // If the move is valid, remove highlighting
-                    if (validMovesOfPrevious.includes(squareId)) {
-                        highlightElement(parentElementOfButton, null);
-                        highlightElement(previousParentElement, null);
-                        removeHighlightFromElements(validMovesOfPrevious);
-                    }
-
-                    // Move the piece to the empty square
-
-                    // Perform en Passant if it is allowed
-                    if (this.selectedElement.type === 'pawn' && this.moveValidator.enPassantAllowed(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
-                        this.enPassantTake(this.selectedElement, squareId);
-                    } else {
-                        this.movePieceToEmpty(this.selectedElement, squareId);
-                    }
-
-                    return;
-                }
-
-                // Case 4 - An piece is already selected and the user clicked on a different piece
-                else {
-
-                    /* 
-                        Check if the move is valid
-                        If the move is valid
-                            - move the piece there
-                            - remove the highlighting
-                    */
-                    let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
-
-                    // Get the valid moves of the previously clicked element
-                    let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
-
-                    // TODO: Possibly remove this?? -> not sure if this condition is even possible
-                    if (this.selectedElement.color !== this.turn) {
-                        return;
-                    }
-
-                    // Check if the user indicated they wanted to castle and if so perform the castle
-
-                    let clickedPieceType = clickedPiece.type;
-                    let previousPieceType = this.selectedElement.type;
-                    let castlingPieces = ['rook', 'king'];
-                    if (castlingPieces.includes(clickedPieceType) && castlingPieces.includes(previousPieceType)) {
-                        if (this.moveValidator.inCheck(clickedPiece.color, this.squares, this.numMovesMade)) {
-                            return;
-                        }
-                        if (previousPieceType !== clickedPieceType) {
-                            if (previousPieceType === 'rook') {
-                                this.castle(this.selectedElement, clickedPiece);
-                            } else {
-                                this.castle(clickedPiece, this.selectedElement);
-                            }
-                        }
-
-                        // Remove highlighting
-                        highlightElement(previousParentElement, null);
-                        removeHighlightFromElements(validMovesOfPrevious);
-
-                        return;
-                    }
-
-                    if (validMovesOfPrevious.includes(squareId)) {
-
-                        highlightElement(parentElementOfButton, null);  // BAK
-                        this.takePiece(this.selectedElement, clickedPiece);
-
-                        // Change the turn - piece has been taken
-                        // TODO: Confirm that a piece has actually been taken before calling this function
-                        this.changeTurn();
-
-                        highlightElement(previousParentElement, null);
-                        removeHighlightFromElements(validMovesOfPrevious);
-
-                        this.selectedElement = null;  // BAK
-                        return;
-                    }
-
-                    // Clicked on the opposing color's piece that is not in a position to be taken
-                    if (clickedPiece.color !== this.turn) {
-                        return;
-                    }
-
-                    // Remove highlighting from the previously clicked element and its valid move squares
-                    highlightElement(previousParentElement, null);
-                    removeHighlightFromElements(validMovesOfPrevious);
-
-                    if (this.squares[squareId] == null) {
-                        this.selectedElement = null;
-                        return;
-                    }
-
-                    this.selectedElement = clickedPiece;
-
-                    highlightElement(parentElementOfButton, 'yellow');
-                    addHighlightToElements(validMoves);
-                }
-
-                return;
-
-            });
-        });
-    }
-
-
-    enPassantTake(takingPawn, diagonalSquare) {
-        let takenPieceIcon = document.createElement('span');
-        let colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
-        takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
-
-        let neighborSquare;
-        if (takingPawn.color === 'white') {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) - 1));
-            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
-        } else {
-            neighborSquare = diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
-            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
-        }
-
-        // Get <td> and <button> of pawn to be removed
-        let takenTableCell = document.getElementsByClassName(neighborSquare)[0];
-        let takenButton = document.getElementsByClassName(neighborSquare)[1];
-
-        takenButton.classList.add("empty");
-        takenButton.classList.remove("piece");
-        takenButton.removeAttribute("id");
-        takenButton.innerHTML = null;
-
-        this.squares[neighborSquare] = null;
-    }
-
 }

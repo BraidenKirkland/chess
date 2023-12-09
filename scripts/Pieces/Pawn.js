@@ -7,7 +7,6 @@ export class Pawn extends Piece {
         this.limitations = true
 
         // For en Passant
-        this.firstMoveRank = 0;
         this.numberOfMostRecentMove = 0;
     }
 
