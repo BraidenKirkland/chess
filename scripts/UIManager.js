@@ -230,4 +230,13 @@ export class UIManager {
         board.style.visibility = "visible";
         promoMenu.style.visibility = "hidden";
     }
+
+    shakePiece(squareId) {
+        const kingElement = document.querySelector(`.${squareId}`);
+        kingElement.classList.add('shake');
+
+        setTimeout(() => {
+            kingElement.classList.remove('shake');
+        }, 1500);
+    }
 }

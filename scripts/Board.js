@@ -27,6 +27,11 @@ export class Board {
 
     changeTurn() {
         this.turn = (this.turn === 'white' ? 'black' : 'white');
+
+        if(this.moveValidator.inCheck(this.turn, this.squares, this.numMovesMade)) {
+            const kingPosition = this.moveValidator.getKingPosition(this.turn, this.squares);
+             this.uiManager.shakePiece(kingPosition);
+        }
     }
 
     initializeBoard() {
