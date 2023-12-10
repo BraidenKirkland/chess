@@ -23,7 +23,7 @@ export class MoveValidator {
     }
 
     isOccupiedBySameColor(dstSquareId, piece, squares) {
-        return squares[dstSquareId] !== null && squares[dstSquareId].color === piece.color;
+        return squares[dstSquareId] && squares[dstSquareId].color === piece.color;
     }
 
     isValidPawnMove(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
@@ -550,7 +550,6 @@ export class MoveValidator {
         return moves;
     }
 
-
     calculatePawnPotentialMoves(pawn, squareId, squares) {
         // For pawns, consider both forward moves and diagonal captures
         const moves = [];
@@ -574,9 +573,7 @@ export class MoveValidator {
         // Diagonal captures
         for (const dx of [-1, 1]) {
             const captureSquare = getRegularPosition([x + dx, y + direction]);
-            if (squares[captureSquare] && squares[captureSquare].color !== pawn.color) {
-                moves.push(captureSquare);
-            }
+            moves.push(captureSquare);
         }
 
         return moves;
