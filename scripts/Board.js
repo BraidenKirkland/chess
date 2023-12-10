@@ -168,16 +168,26 @@ export class Board {
     handleButtonClick(eventObject) {
         eventObject.stopPropagation();
 
-        if (this.isGameOver()) {
-            return;
-        }
-
         const squareId = this.getClickedSquareId(eventObject);
         const clickedPiece = this.getClickedPiece(squareId);
         const parentElementOfButton = this.uiManager.getParentElementOfButton(squareId);
         const validMoves = this.getValidMovesForPiece(clickedPiece, squareId);
 
         this.processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves);
+
+        const [checkmate, stalemate] = this.checkMateOrStaleMate();
+
+        if(checkmate || stalemate) {
+            const winningColor = this.moveValidator.opposingColor(this.turn);
+            this.uiManager.showGameOverMenu(winningColor, checkmate);
+        }
+    }
+
+    checkMateOrStaleMate() {
+        const checkmate = this.moveValidator.isCheckMate(this.turn, this.squares, this.numMovesMade);
+        const stalemate = this.moveValidator.isStaleMate(this.turn, this.squares, this.numMovesMade);
+
+        return [checkmate, stalemate];
     }
 
     isGameOver() {

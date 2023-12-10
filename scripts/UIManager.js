@@ -1,6 +1,10 @@
 import { piecesToSymbols } from "./helpers.js";
 
 export class UIManager {
+
+    constructor() {
+        this.setUpGameOverEventListeners();
+    }
     
     getBoardPieces() {
         return [...document.querySelectorAll(".piece, .empty")];
@@ -229,5 +233,26 @@ export class UIManager {
         const promoMenu = document.getElementsByClassName(`${color}-promotion-menu`)[0];
         board.style.visibility = "visible";
         promoMenu.style.visibility = "hidden";
+    }
+
+    showGameOverMenu(winningColor, checkmate) {
+        document.querySelector('.game-over').style.display = 'block';
+        document.querySelector('.game').style.display = 'none';
+
+        const reasonForGameOver = checkmate ? 'Checkmate' : 'Stalemate';
+
+        if(checkmate) {
+            const capitalizedWinningColor = winningColor.charAt(0).toUpperCase() + winningColor.slice(1);
+            document.querySelector('.winner-color').innerText = `${capitalizedWinningColor} Wins!`;
+            document.querySelector('.winner-king').innerHTML = '&#9812';
+        }
+
+        document.querySelector('.game-over-type').innerText = reasonForGameOver + '!';
+    }
+
+    setUpGameOverEventListeners() {
+        document.getElementById('newGameButton').addEventListener('click', () => {
+            location.reload();
+        })
     }
 }
