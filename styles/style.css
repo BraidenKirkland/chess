@@ -3,12 +3,17 @@ html, body {
     height: 100%;
     position: relative;
     font-family: Arial, Helvetica, sans-serif;
+    background-color: rgb(47, 46, 43);
 }
 
 .game {
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
+}
+
+#boardScreenTitle, #takeBlackPiecesTitle, #takenWhitePiecesTitle {
+    color: white;
 }
 
 .taken-pieces-black {
@@ -47,7 +52,9 @@ html, body {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-    height: 50%
+    height: 50%;
+    background-color: rgb(223, 219, 219);
+    border-radius: 8px;
 }
 
 #board {
@@ -204,14 +211,28 @@ td{
   animation-iteration-count: infinite; /* Use a finite number for a temporary shake */
 }
 
-.game-over {
+.game-over, .start-game {
     display: none;
     height: 100%;
     width: 100%;
     padding: 0px;
 }
 
-.game-over-modal {
+/* Temporary */
+.start-game {
+    display: block;
+}
+
+/* .game-over {
+    display: block;
+} */
+
+/* Temporary */
+.game {
+    display: none;
+}
+
+.game-over-modal, .start-game-modal {
     height: 100%;
     width: 100%;
     padding: 0px;
@@ -222,10 +243,9 @@ td{
     margin: auto;
 }
 
-.game-over-content {
+.game-over-content, .start-game-content {
     width: 50%;
     height: 75%;
-    background-color: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -233,7 +253,7 @@ td{
     border-radius: 10px;
 }
 
-.game-over-title {
+.game-over-title, .start-game-title {
     color: white;
     font-weight: bold;
     background-color: black;
@@ -286,7 +306,7 @@ td{
     font-size: 2rem;
 }
 
-.game-over-buttons {
+.game-over-buttons, .start-game-buttons {
     color: white;
     font-weight: bold;
     background-color: black;
@@ -305,7 +325,7 @@ td{
     
 }
 
-#newGameButton, #mainMenuButton {
+#newGameButton, #mainMenuButton, #startGameButton {
     width: 25%;
     height: 50%;
     font-size: 1.5rem;
@@ -318,11 +338,11 @@ td{
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-#newGameButton:hover, #mainMenuButton:hover {
+#newGameButton:hover, #mainMenuButton:hover, #startGameButton:hover {
     background-color: rgb(60, 65, 65); /* Lighter shade for hover */
 }
 
-#newGameButton:active, #mainMenuButton:active {
+#newGameButton:active, #mainMenuButton:active, #startGameButton:active {
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Inset shadow for a pressed effect */
     transform: translateY(2px); /* Slightly shifts the button down */
     border: 2px solid white;

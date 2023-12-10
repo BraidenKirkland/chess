@@ -13,12 +13,12 @@
 <body>
     <div class="game">
         <div class="taken-pieces-black">
-            <h2>Black Pieces Taken</h2>
+            <h2 id="takeBlackPiecesTitle">Black Pieces Taken</h2>
             <div class="taken-pieces-black-list"></div>
         </div>
 
         <div class="board-title-reset">
-            <h1>Two Player Chess</h1>
+            <h1 id="boardScreenTitle">Two Player Chess</h1>
             <table id="board">
                 <tr class="odd-row">
                     <td class="dark-square">
@@ -184,7 +184,7 @@
         </div>
 
         <div class="taken-pieces-white">
-            <h2>White Pieces Taken</h2>
+            <h2 id="takenWhitePiecesTitle">White Pieces Taken</h2>
             <div class="taken-pieces-white-list"></div>
         </div>
     </div>
@@ -221,23 +221,34 @@
         </div>
     </div>
 
-    <div class="game-over">
-    <div class="game-over-modal">
-        <div class="game-over-content">
-            <h1 class="game-over-title">Game Over</h1>
-            <h2 class="game-over-type"></h2>
-            <div class="winner">
-                <div class="winner-content">
-                    <span class="winner-king"></span><span class="winner-color"></span>
+    <div class="start-game">
+        <div class="start-game-modal">
+            <div class="start-game-content">
+                <h1 class="start-game-title">&#9816 Two Player Chess &#9816</h1>
+                <div class="start-game-buttons">
+                    <button id="startGameButton">New Game</button>
                 </div>
-            </div>
-            <div class="game-over-buttons">
-                <button id="newGameButton">New Game</button>
-                <button id="mainMenuButton">Main Menu</button>
             </div>
         </div>
     </div>
-</div>
+
+    <div class="game-over">
+        <div class="game-over-modal">
+            <div class="game-over-content">
+                <h1 class="game-over-title">Game Over</h1>
+                <h2 class="game-over-type"></h2>
+                <div class="winner">
+                    <div class="winner-content">
+                        <span class="winner-king"></span><span class="winner-color"></span>
+                    </div>
+                </div>
+                <div class="game-over-buttons">
+                    <button id="newGameButton">New Game</button>
+                    <button id="mainMenuButton">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="./scripts/index.js"></script>
 </body>
