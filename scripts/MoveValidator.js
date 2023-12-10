@@ -100,7 +100,6 @@ export class MoveValidator {
         const isVertical = srcX === dstX;
         const isDiagonal = Math.abs(dstX - srcX) === Math.abs(dstY - srcY);
 
-        // Call the appropriate method
         if (isHorizontal) return this.isHorizontalPathClear(srcX, dstX, srcY, squares);
         if (isVertical) return this.isVerticalPathClear(srcY, dstY, srcX, squares);
         if (isDiagonal) return this.isDiagonalPathClear(srcX, srcY, dstX, dstY, squares);
@@ -253,23 +252,21 @@ export class MoveValidator {
         Does moving pieceToMove to newPosition remove the check on the king?
     */
     moveRemovesCheck(pieceToMove, newPosition, squares, numMovesMade) {
-
-        let currentPositionOfPiece = pieceToMove.squareId;
-        let piecePresentlyInNewPosition = squares[newPosition];
+        const currentPositionOfPiece = pieceToMove.squareId;
+        const piecePresentlyInNewPosition = squares[newPosition];
 
         // Alter the board temporarily
         squares[currentPositionOfPiece] = null;
         squares[newPosition] = pieceToMove;
 
         // Perform the swap and run the inCheck function
-        let retVal = !this.inCheck(pieceToMove.color, squares, numMovesMade);
+        const isKingSafeAfterMove = !this.inCheck(pieceToMove.color, squares, numMovesMade);
 
         // Set the board back to its original state
         squares[newPosition] = piecePresentlyInNewPosition;
         squares[currentPositionOfPiece] = pieceToMove;
 
-
-        return retVal;
+        return isKingSafeAfterMove;
     }
 
     allValidPawnMoves(piece, srcSquareId, squares, numMovesMade) {
@@ -280,7 +277,7 @@ export class MoveValidator {
 
         // Forward moves
         fwdMoves.forEach(move => {
-            let newPosition = [
+            const newPosition = [
                 startingPosition[0] + (piece.color === 'white' ? move[0] : -move[0]),
                 startingPosition[1] + (piece.color === 'white' ? move[1] : -move[1])
             ];
@@ -289,7 +286,7 @@ export class MoveValidator {
 
         // Kill moves
         killMoves.forEach(move => {
-            let newPosition = [
+            const newPosition = [
                 startingPosition[0] + (piece.color === 'white' ? move[0] : -move[0]),
                 startingPosition[1] + (piece.color === 'white' ? move[1] : -move[1])
             ];
@@ -305,7 +302,7 @@ export class MoveValidator {
 
         piece.moves.forEach(move => {
             for (let j = 1; j < 8; j++) {
-                let newPosition = [
+                const newPosition = [
                     startingPosition[0] + move[0] * j,
                     startingPosition[1] + move[1] * j
                 ];
@@ -319,7 +316,7 @@ export class MoveValidator {
 
     addValidMove(srcSquareId, newPosition, piece, squares, numMovesMade, validMoves) {
         if (this.isPositionOnBoard(newPosition)) {
-            let dstSquareId = getRegularPosition(newPosition);
+            const dstSquareId = getRegularPosition(newPosition);
             if (this.validMove(srcSquareId, dstSquareId, piece, squares, numMovesMade)) {
                 validMoves.push(dstSquareId);
             }
@@ -348,10 +345,9 @@ export class MoveValidator {
     }
 
     squareUnderAttack(squareId, opposingColor, squares, numMovesMade) {
-        let validMoves;
         for (const [square, piece] of Object.entries(squares)) {
             if (piece !== null && piece.color === opposingColor) {
-                validMoves = this.getValidMoves(square, squares, numMovesMade);
+                const validMoves = this.getValidMoves(square, squares, numMovesMade);
                 // TODO: May need a special check for pawns trying to move forward as they are not "attacking"
                 //       However, they will be able to attack both diagonals
                 if (validMoves.includes(squareId)) {
@@ -438,17 +434,13 @@ export class MoveValidator {
     }
 
     moveLeadsToCheck(srcSquareId, dstSquareId, piece, squares) {
-        let originalPiece = squares[dstSquareId];
-        let kingSquareId = this.getKingPosition(piece.color, squares);
-        if (piece.type === 'king') {
-            kingSquareId = dstSquareId;
-        }
-        let kingInCheck;
+        const originalPiece = squares[dstSquareId];
+        const kingSquareId = piece.type === 'king' ? dstSquareId : this.getKingPosition(piece.color, squares);
 
         squares[dstSquareId] = piece;
         squares[srcSquareId] = null;
 
-        kingInCheck = this.isSquareAttacked(kingSquareId, piece.color, squares);
+        const kingInCheck = this.isSquareAttacked(kingSquareId, piece.color, squares);
 
         squares[srcSquareId] = piece;
         squares[dstSquareId] = originalPiece;
@@ -457,21 +449,19 @@ export class MoveValidator {
     }
 
     getValidMoves(squareId, squares, numMovesMade) {
-        let currentPiece = squares[squareId];
+        const currentPiece = squares[squareId];
         if (!currentPiece) {
             return [];
         }
 
         // First, get all theoretically valid moves for the piece
-        let potentialMoves = this.calculatePotentialMoves(currentPiece, squareId, squares, numMovesMade);
+        const potentialMoves = this.calculatePotentialMoves(currentPiece, squareId, squares, numMovesMade);
 
         // Filter out moves that are not valid or lead to a check
-        potentialMoves = potentialMoves.filter(dstSquareId =>
+        return potentialMoves.filter(dstSquareId =>
             this.validMove(squareId, dstSquareId, currentPiece, squares, numMovesMade) &&
             !this.moveLeadsToCheck(squareId, dstSquareId, currentPiece, squares)
         );
-
-        return potentialMoves;
     }
 
     calculatePotentialMoves(piece, squareId, squares, numMovesMade) {
@@ -496,8 +486,8 @@ export class MoveValidator {
         const [x, y] = getNumericPosition(squareId);
 
         knight.moves.forEach(([dx, dy]) => {
-            let newX = x + dx;
-            let newY = y + dy;
+            const newX = x + dx;
+            const newY = y + dy;
             if (this.isPositionOnBoard([newX, newY])) {
                 moves.push(getRegularPosition([newX, newY]));
             }
@@ -507,12 +497,12 @@ export class MoveValidator {
     }
 
     calculatePotentialKingMoves(king, squareId) {
-        let moves = [];
+        const moves = [];
         const [x, y] = getNumericPosition(squareId);
 
         king.moves.forEach(([dx, dy]) => {
-            let newX = x + dx;
-            let newY = y + dy;
+            const newX = x + dx;
+            const newY = y + dy;
             if (this.isPositionOnBoard([newX, newY])) {
                 moves.push(getRegularPosition([newX, newY]));
             }
@@ -534,18 +524,18 @@ export class MoveValidator {
     }
 
     calculatePotentialLinearMoves(piece, squareId, squares) {
-        let moves = [];
+        const moves = [];
         const [x, y] = getNumericPosition(squareId);
 
         piece.moves.forEach(([dx, dy]) => {
             for (let j = 1; j < 8; j++) {
-                let newX = x + dx * j;
-                let newY = y + dy * j;
+                const newX = x + dx * j;
+                const newY = y + dy * j;
                 if (!this.isPositionOnBoard([newX, newY])) {
                     break;
                 }
 
-                let newPosition = getRegularPosition([newX, newY]);
+                const newPosition = getRegularPosition([newX, newY]);
                 if (squares[newPosition]) {
                     if (squares[newPosition].color !== piece.color) {
                         moves.push(newPosition);
@@ -563,7 +553,7 @@ export class MoveValidator {
 
     calculatePawnPotentialMoves(pawn, squareId, squares) {
         // For pawns, consider both forward moves and diagonal captures
-        let moves = [];
+        const moves = [];
 
         // Forward moves
         const [x, y] = getNumericPosition(squareId);
@@ -582,7 +572,7 @@ export class MoveValidator {
         }
 
         // Diagonal captures
-        for (let dx of [-1, 1]) {
+        for (const dx of [-1, 1]) {
             const captureSquare = getRegularPosition([x + dx, y + direction]);
             if (squares[captureSquare] && squares[captureSquare].color !== pawn.color) {
                 moves.push(captureSquare);

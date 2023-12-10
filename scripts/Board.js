@@ -59,8 +59,8 @@ export class Board {
     }
 
     addPiece(pieceElement, color) {
-        let position = [...pieceElement.classList][1];
-        let pieceType = pieceElement.id.split('-')[0].replace(/\d/g, '');
+        const position = [...pieceElement.classList][1];
+        const pieceType = pieceElement.id.split('-')[0].replace(/\d/g, '');
         this.squares[position] = createPiece(color, pieceType);
     }
 
@@ -79,15 +79,15 @@ export class Board {
     }
 
     getNewKingAndRookPositions(rook, king) {
-        let kingNumericPosition = getNumericPosition(king.squareId);
-        let horizontalOffset = kingNumericPosition[0] - getNumericPosition(rook.squareId)[0];
-        let kingMovementUnits = horizontalOffset > 0 ? -2 : 2;
-        let rookUnitsRelativeToKing = horizontalOffset > 0 ? 1 : -1;
+        const kingNumericPosition = getNumericPosition(king.squareId);
+        const horizontalOffset = kingNumericPosition[0] - getNumericPosition(rook.squareId)[0];
+        const kingMovementUnits = horizontalOffset > 0 ? -2 : 2;
+        const rookUnitsRelativeToKing = horizontalOffset > 0 ? 1 : -1;
 
         // Calculate new positions for king and rook
         kingNumericPosition[0] += kingMovementUnits;
-        let newKingPosition = getRegularPosition(kingNumericPosition);
-        let newRookPosition = getRegularPosition([kingNumericPosition[0] + rookUnitsRelativeToKing, kingNumericPosition[1]]);
+        const newKingPosition = getRegularPosition(kingNumericPosition);
+        const newRookPosition = getRegularPosition([kingNumericPosition[0] + rookUnitsRelativeToKing, kingNumericPosition[1]]);
 
         return [newKingPosition, newRookPosition];
     }
