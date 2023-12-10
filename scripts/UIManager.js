@@ -242,7 +242,8 @@ export class UIManager {
         setTimeout(() => {
             kingElement.classList.remove('shake');
         }, 1500);
-        
+    }
+    
     showGameOverMenu(winningColor, checkmate) {
         document.querySelector('.game-over').style.display = 'block';
         document.querySelector('.game').style.display = 'none';
