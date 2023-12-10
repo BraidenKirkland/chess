@@ -326,7 +326,8 @@ export class Board {
         const castlingPieces = ['rook', 'king'];
         return castlingPieces.includes(clickedPieceType) && 
                castlingPieces.includes(previousPieceType) && 
-               clickedPieceType != previousPieceType;
+               clickedPieceType != previousPieceType &&
+               this.selectedElement.color === clickedPiece.color;
     }
 
     promotePiece(squareId, newPieceType, color) {
