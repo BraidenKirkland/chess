@@ -44,20 +44,20 @@ export class UIManager {
     }
 
     updateBoardAfterTake(victimSquareId, killingSquareId) {
-        let dstSquareList = document.getElementsByClassName(victimSquareId);
-        let dstSquareTableCell = dstSquareList[0];
-        let dstSquareButton = dstSquareList[1];
+        const dstSquareList = document.getElementsByClassName(victimSquareId);
+        const dstSquareTableCell = dstSquareList[0];
+        const dstSquareButton = dstSquareList[1];
 
-        let currentSquareList = document.getElementsByClassName(killingSquareId);
-        let currentSquareTableCell = currentSquareList[0];
-        let currentSquareButton = currentSquareList[1];
+        const currentSquareList = document.getElementsByClassName(killingSquareId);
+        const currentSquareTableCell = currentSquareList[0];
+        const currentSquareButton = currentSquareList[1];
 
         // Update the square id in the button's class
         currentSquareButton.classList.remove(killingSquareId)
         currentSquareButton.classList.add(victimSquareId);
 
-        let dstSquareChildToReplace = [];
-        let currentSquareChildToReplace = [];
+        const dstSquareChildToReplace = [];
+        const currentSquareChildToReplace = [];
 
         for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
             if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
@@ -84,8 +84,8 @@ export class UIManager {
     }
 
     updateBoardAfterEnPassantTake(takingPawn, neighborSquare) {
-        let takenPieceIcon = document.createElement('span');
-        let colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
+        const takenPieceIcon = document.createElement('span');
+        const colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
         takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
 
         // Updating UI for taken pieces list
@@ -96,7 +96,7 @@ export class UIManager {
         }
 
         // Get <button> of pawn to be removed
-        let takenButton = document.getElementsByClassName(neighborSquare)[1];
+        const takenButton = document.getElementsByClassName(neighborSquare)[1];
 
         takenButton.classList.add("empty");
         takenButton.classList.remove("piece");
@@ -105,7 +105,7 @@ export class UIManager {
     }
 
     displayTakenPiece(victimPiece, whitePiecesKilled, blackPiecesKilled) {
-        let takenPieceIcon = document.createElement('span');
+        const takenPieceIcon = document.createElement('span');
         takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.type][victimPiece.color];
 
         if (victimPiece.color === 'white') {
@@ -120,15 +120,15 @@ export class UIManager {
 
     updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece) {
         // Get table cell (<td>) and button elements for destination (empty) square
-        let dstSquareTableCell = document.getElementsByClassName(newPosition)[0];
-        let dstSquareButton = document.getElementsByClassName(newPosition)[1];
+        const dstSquareTableCell = document.getElementsByClassName(newPosition)[0];
+        const dstSquareButton = document.getElementsByClassName(newPosition)[1];
 
         // Get table cell (<td>) and button elements for piece square
-        let pieceSquareTableCell = document.getElementsByClassName(squareIdofPiece)[0];
-        let pieceSquareButton = document.getElementsByClassName(squareIdofPiece)[1];
+        const pieceSquareTableCell = document.getElementsByClassName(squareIdofPiece)[0];
+        const pieceSquareButton = document.getElementsByClassName(squareIdofPiece)[1];
 
         // Need to replace the children of the table cells
-        let dstSquareChildToReplace = [];
+        const dstSquareChildToReplace = [];
         for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
             if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
                 dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);

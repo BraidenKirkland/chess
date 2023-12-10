@@ -109,18 +109,7 @@ export class Board {
 
 
     movePieceToEmpty(pieceToMove, newPosition, castling = false) {
-        // Make a copy using slice()
-        let squareIdofPiece = pieceToMove.squareId.slice();
-
-        // if (!castling) {
-        //     const validMoves = this.moveValidator.getValidMoves(squareIdofPiece, this.squares, this.numMovesMade);
-
-        //     if (!validMoves.includes(newPosition)) {
-        //         return;
-        //     }
-        // }
-
-        console.log(newPosition);
+        const squareIdofPiece = pieceToMove.squareId.slice();
 
         this.uiManager.updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece);
         this.squares[newPosition] = pieceToMove;
@@ -138,8 +127,7 @@ export class Board {
 
     handlePromotion(pieceToMove, newPosition, squareIdofPiece) {
         if (pieceToMove.type === 'pawn') {
-
-            let verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
+            const verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
             pieceToMove.ranksAdvanced += verticalDistance;
 
             if (pieceToMove.canPromote()) {
@@ -153,8 +141,8 @@ export class Board {
     */
     takePiece(killingPiece, victimPiece) {
         // Get the current square id of each piece
-        let victimSquareId = victimPiece.squareId.slice();
-        let killingSquareId = killingPiece.squareId.slice();
+        const victimSquareId = victimPiece.squareId.slice();
+        const killingSquareId = killingPiece.squareId.slice();
 
         this.numMovesMade++;
         this.squares[victimSquareId] = killingPiece;
@@ -202,7 +190,7 @@ export class Board {
     }
 
     getClickedPiece(squareId) {
-        let clickedPiece = this.squares[squareId];
+        const clickedPiece = this.squares[squareId];
         if (clickedPiece !== null) {
             clickedPiece.squareId = squareId;
         }
@@ -210,12 +198,11 @@ export class Board {
     }
 
     getValidMovesForPiece(clickedPiece, squareId) {
-        let validMoves = [];
-        if (clickedPiece !== null) {
-            validMoves = this.moveValidator.getValidMoves(squareId, this.squares, this.numMovesMade);
+        if (!clickedPiece) {
+            return [];
         }
 
-        return validMoves;
+        return this.moveValidator.getValidMoves(squareId, this.squares, this.numMovesMade);
     }
 
     processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves) {
@@ -232,7 +219,7 @@ export class Board {
 
     handleNoPieceSelected(clickedPiece, parentElementOfButton, validMoves) {
         // No element was currently selected and an empty square was clicked on
-        if (clickedPiece === null) {
+        if (! clickedPiece) {
             return;
         }
 
@@ -258,8 +245,8 @@ export class Board {
 
     handleClickOnEmptySquare(parentElementOfButton, squareId) {
         // Get previously selected button and valid moves of the previous button
-        let previousParentElement = document.querySelector("." + this.selectedElement.squareId);
-        let validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
+        const previousParentElement = document.querySelector("." + this.selectedElement.squareId);
+        const validMovesOfPrevious = this.moveValidator.getValidMoves(this.selectedElement.squareId, this.squares, this.numMovesMade);
 
         // If the move is valid, remove highlighting
         if (! validMovesOfPrevious.includes(squareId)) {
