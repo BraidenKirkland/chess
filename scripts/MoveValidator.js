@@ -325,55 +325,25 @@ export class MoveValidator {
             }
         }
     }
-    
-    moveCreatesCheck(pieceToMove, squares, newPosition = null, numMovesMade) {
-        let retVal = false;
-
-        // record the squareId of the piece
-        let currentPosition = pieceToMove.squareId;
-
-        // temporarily remove the piece from the board
-        squares[currentPosition] = null;
-
-        let piecePresentlyInNewPosition = null;
-
-        // When a piece currently occupies the new position
-        // Replace it with the piece that is being moved
-        if (newPosition !== null && squares[newPosition] !== null) {
-            piecePresentlyInNewPosition = squares[newPosition];
-        }
-
-        squares[newPosition] = pieceToMove;
-
-        // Check if this board arrangement results in a check
-        retVal = this.inCheck(pieceToMove.color, squares, numMovesMade);
-
-        // Reset the board
-        squares[currentPosition] = pieceToMove;
-        squares[newPosition] = piecePresentlyInNewPosition;
-
-        return retVal;
-    }
 
     isStaleMate(color, squares, numMovesMade) {
-        // Cannot be a stalemate if the piece is already in check
         if (this.inCheck(color, squares, numMovesMade)) {
             return false;
         }
 
         const piecesForColor = this.getAllPiecesForColor(color, squares);
 
-        for(const piece of piecesForColor) {
-            const validMoves = this.getValidMoves(piece.squareId.slice(), squares, numMovesMade);
+        for (const piece of piecesForColor) {
+            const validMoves = this.getValidMoves(piece.squareId, squares, numMovesMade);
 
-            for(const move of validMoves) {
-                if(!this.moveCreatesCheck(piece, squares, move)) {
-                    return false;
-                }
+            if (validMoves.length > 0) {
+                // There is at least one legal move, so not a stalemate
+                return false;
             }
         }
 
-        console.log('STALEMATE');
+        console.log('STALEMATE !!!!');
+        // No legal moves for any piece, it's a stalemate
         return true;
     }
 
