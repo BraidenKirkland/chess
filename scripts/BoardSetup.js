@@ -2,9 +2,6 @@ export class BoardSetup {
 
     constructor() {
         this.addClassesToBoardSquares();
-        this.setupReset();
-        this.setupResetFinal();
-        this.setupResetQuit();
     }
 
     addClassesToBoardSquares() {
