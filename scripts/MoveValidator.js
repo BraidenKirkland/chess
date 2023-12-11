@@ -243,7 +243,6 @@ export class MoveValidator {
             }
         }
 
-        console.log('CHECKMATE !!!!!');
         return true;
     }
 
