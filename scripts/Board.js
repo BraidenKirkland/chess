@@ -1,6 +1,6 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
 import { MoveValidator } from "./MoveValidator.js";
-import { getNumericPosition, getRegularPosition } from "./helpers.js";
+import { getNumericPosition, getRegularPosition, saveGameState, retrieveGameState, createChessBoard } from "./helpers.js";
 import { UIManager } from "./UIManager.js";
 
 export class Board {
@@ -8,9 +8,34 @@ export class Board {
     constructor() {
         this.moveValidator = new MoveValidator();
         this.uiManager = new UIManager();
+        this.setUpGame();
+
         this.uiManager.setupEventListeners(this.handleButtonClick.bind(this));
         this.uiManager.setupPromotionEventListeners(this.handlePromotionSelection.bind(this));
+    }
 
+    setUpGame() {
+        if (! localStorage.getItem('existingGameState')) {
+            console.log('no existing game state found');
+            this.initializeNewGame();
+            return;
+        }
+
+        retrieveGameState(this);
+
+        for (const [squareId, piece] of Object.entries(this.squares)) {
+            const squareElement = document.querySelector(`.${squareId}`);
+            if(piece) {
+                squareElement.innerHTML = `<button class="piece ${squareId}">${piece.getSymbol()}</button>`;
+            }else {
+                squareElement.innerHTML = `<button class="empty ${squareId}"></button>`;
+            }
+        }
+
+        this.uiManager.showTakenPiecesAfterGameLoad(this.whitePiecesKilled, this.blackPiecesKilled);
+    }
+
+    initializeNewGame() {
         // arrays to track pieces as they are killed
         this.whitePiecesKilled = [];
         this.blackPiecesKilled = [];
@@ -27,6 +52,7 @@ export class Board {
 
     changeTurn() {
         this.turn = (this.turn === 'white' ? 'black' : 'white');
+        saveGameState(this);
 
         if(this.moveValidator.inCheck(this.turn, this.squares, this.numMovesMade)) {
             const kingPosition = this.moveValidator.getKingPosition(this.turn, this.squares);
@@ -66,7 +92,9 @@ export class Board {
     addPiece(pieceElement, color) {
         const position = [...pieceElement.classList][1];
         const pieceType = pieceElement.id.split('-')[0].replace(/\d/g, '');
-        this.squares[position] = createPiece(color, pieceType);
+        const piece = createPiece(color, pieceType);
+        this.squares[position] = piece;
+        piece.squareId = position;
     }
 
     castle(rook, king) {
@@ -126,7 +154,10 @@ export class Board {
         pieceToMove.moveCount++;
         pieceToMove.numberOfMostRecentMove = this.numMovesMade;
 
-        this.handlePromotion(pieceToMove, newPosition, squareIdofPiece);
+        if(this.handlePromotion(pieceToMove, newPosition, squareIdofPiece)) {
+            return;
+        }
+
         this.changeTurn();
     }
 
@@ -137,8 +168,11 @@ export class Board {
 
             if (pieceToMove.canPromote()) {
                 this.uiManager.showPromotionMenu(pieceToMove.color)
+                return true;
             }
         }
+
+        return false;
     }
 
     /* 
@@ -163,6 +197,8 @@ export class Board {
 
         if (killingPiece.canPromote()) {
             this.uiManager.showPromotionMenu(killingPiece.color)
+
+            return true;
         }
 
         this.changeTurn();
@@ -206,7 +242,7 @@ export class Board {
 
     getClickedPiece(squareId) {
         const clickedPiece = this.squares[squareId];
-        if (clickedPiece !== null) {
+        if (clickedPiece) {
             clickedPiece.squareId = squareId;
         }
         return clickedPiece;
@@ -332,10 +368,13 @@ export class Board {
 
     promotePiece(squareId, newPieceType, color) {
         const promotedPiece = createPiece(color, newPieceType);
-        this.squares[squareId] = promotedPiece;
+        promotedPiece.squareId = squareId;
 
+        this.squares[squareId] = promotedPiece;
         this.uiManager.updateSquareWithPromotedPiece(squareId, promotedPiece);
         this.uiManager.hidePromotionMenu(color);
+
+        this.changeTurn();
     }
 
     handlePromotionSelection(typeOfPiece, colorOfPiece) {

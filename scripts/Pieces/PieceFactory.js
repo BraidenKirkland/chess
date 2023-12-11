@@ -5,8 +5,8 @@ import { Bishop } from './Bishop.js';
 import { Rook } from './Rook.js';
 import { Pawn } from './Pawn.js';
 
-export function createPiece(color, name) {
-    switch (name.toLowerCase()) {
+export function createPiece(color, type) {
+    switch (type.toLowerCase()) {
         case 'king':
             return new King(color);
         case 'queen':

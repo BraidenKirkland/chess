@@ -1,3 +1,5 @@
+import { createChessBoard } from './helpers.js';
+
 export class BoardSetup {
 
     constructor() {
@@ -36,7 +38,7 @@ export class BoardSetup {
 
     setupResetFinal() {
         document.getElementById('final-reset').addEventListener('click', () => {
-            location.reload();
+            localStorage.removeItem('existingGameState');
         });
     }
 

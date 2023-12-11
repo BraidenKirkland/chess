@@ -114,12 +114,29 @@ export class UIManager {
 
         if (victimPiece.color === 'white') {
 
-            whitePiecesKilled.push(victimPiece)
+            whitePiecesKilled.push(victimPiece.getSymbol())
             document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
         } else {
-            blackPiecesKilled.push(victimPiece);
+            blackPiecesKilled.push(victimPiece.getSymbol());
             document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
         }
+    }
+
+    showTakenPiecesAfterGameLoad(whitePiecesKilled, blackPiecesKilled) {
+        const takenWhitePiecesList = document.getElementsByClassName('taken-pieces-white-list')[0];
+        console.log(whitePiecesKilled);
+        whitePiecesKilled.forEach(pieceSymbol => {
+            const takenPieceIcon = document.createElement('span');
+            takenPieceIcon.innerHTML = pieceSymbol;
+            takenWhitePiecesList.appendChild(takenPieceIcon);
+        });
+
+        const takenBlackPiecesList = document.getElementsByClassName('taken-pieces-black-list')[0];
+        blackPiecesKilled.forEach(pieceSymbol => {
+            const takenPieceIcon = document.createElement('span');
+            takenPieceIcon.innerHTML = pieceSymbol;
+            takenBlackPiecesList.appendChild(takenPieceIcon);
+        })
     }
 
     updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece) {
@@ -260,8 +277,8 @@ export class UIManager {
     }
 
     setUpGameOverEventListeners() {
-        document.getElementById('newGameButton').addEventListener('click', () => {
-            location.reload();
-        })
+        // document.getElementById('newGameButton').addEventListener('click', () => {
+        //     location.reload();
+        // })
     }
 }

@@ -1,13 +1,9 @@
 import Piece from "./Piece.js";
 
 export class Pawn extends Piece {
-    constructor(color, type = "pawn") {
-        super(color, type);
+    constructor(color, type = "pawn", limitations = true) {
+        super(color, type, limitations);
         this.moves = [[-1, 1], [1, 1]];  // Kill moves
-        this.limitations = true
-
-        // For en Passant
-        this.numberOfMostRecentMove = 0;
     }
 
     getFwdMoves() {

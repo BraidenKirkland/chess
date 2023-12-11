@@ -1,14 +1,17 @@
 // Piece.js
 export default class Piece {
-    constructor(color, type) {
+    constructor(color, type, limitations) {
         this.color = color;
         this.type = type;
-        this.position = null;
         this.moveCount = 0;
         this.killCount = 0;
         // For en passant, this number must be exactly three for the capturing pawn
         // If this number === 6 for pawns, they can be promoted
         this.ranksAdvanced = 0;
+        // For en Passant
+        this.numberOfMostRecentMove = 0;
+        this.limitations = limitations;
+        this.squareId = null;
     }
 
     canPromote() {
