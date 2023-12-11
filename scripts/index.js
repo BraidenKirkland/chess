@@ -1,16 +1,17 @@
 import { Board } from "./Board.js";
 import { BoardSetup } from "./BoardSetup.js";
-import {createChessBoard, updateElementDisplay} from './helpers.js';
+import {createChessBoard, setUpGame, showGameAndHideWelcome, clearTakenPieces} from './helpers.js';
 
-// document.addEventListener('DOMContentLoaded', function () {
-//     if (localStorage.getItem('existingGameState')) {
-//         showGameAndHideWelcome();
-//         return;
-//     }
+document.addEventListener('DOMContentLoaded', function () {
+    if (localStorage.getItem('existingGameState')) {
+        showGameAndHideWelcome();
+        // return;
+    }
 
-//     const boardSetup = new BoardSetup();
-//     const board = new Board();
-// });
+    createChessBoard();
+    new BoardSetup();
+    let board = new Board();
+});
 
 // document.getElementById('startGameButton').addEventListener('click', () => {
 //     clearStorage();
@@ -38,22 +39,37 @@ import {createChessBoard, updateElementDisplay} from './helpers.js';
 // let board;
 
 document.getElementById('startGameButton').addEventListener('click', () => {
-    showGameAndHideWelcome();
-    createChessBoard();
-    new BoardSetup();
-    const board = new Board();
+    setUpGame();
 });
 
 document.getElementById('newGameButton').addEventListener('click', () => {
-    localStorage.removeItem('existingGameState');
-    showGameAndHideWelcome();
+    setUpGame();
+});
+
+document.getElementById('final-reset').addEventListener('click', () => {
+    document.querySelector('.confirm-reset').style.visibility = 'hidden';
+    document.getElementById('board').style.visibility = 'visible';
+    document.getElementById('reset').style.visibility = 'visible';
+    setUpGame();
+});
+
+document.getElementById('quit-reset').addEventListener('click', () => {
+    document.getElementById("board").style.visibility = "visible";
+    document.getElementById('reset').style.visibility = "visible";
+    document.querySelector('.confirm-reset').style.visibility = "hidden";
+
+    clearTakenPieces()
     createChessBoard();
     new BoardSetup();
     new Board();
 });
 
-const showGameAndHideWelcome = () => {
-    updateElementDisplay('game', 'flex');
-    updateElementDisplay('start-game', 'none');
-    updateElementDisplay('game-over', 'none');
+document.getElementById('reset').addEventListener('click', () => {
+    document.getElementById("board").style.visibility = "hidden";
+    document.getElementById('reset').style.visibility = "hidden";
+    document.querySelector('.confirm-reset').style.visibility = "visible";
+});
+
+function quitReset() {
+    // 
 }

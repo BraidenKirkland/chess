@@ -1,4 +1,5 @@
 import { piecesToSymbols } from "./helpers.js";
+import { setUpGame } from './helpers.js';
 
 export class UIManager {
 
@@ -124,7 +125,6 @@ export class UIManager {
 
     showTakenPiecesAfterGameLoad(whitePiecesKilled, blackPiecesKilled) {
         const takenWhitePiecesList = document.getElementsByClassName('taken-pieces-white-list')[0];
-        console.log(whitePiecesKilled);
         whitePiecesKilled.forEach(pieceSymbol => {
             const takenPieceIcon = document.createElement('span');
             takenPieceIcon.innerHTML = pieceSymbol;
@@ -278,7 +278,7 @@ export class UIManager {
 
     setUpGameOverEventListeners() {
         // document.getElementById('newGameButton').addEventListener('click', () => {
-        //     location.reload();
+        //     setUpGame();
         // })
     }
 }

@@ -1,4 +1,6 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
+import { BoardSetup } from "./BoardSetup.js";
+import { Board } from "./Board.js";
 
 export const getNumericPosition = (regularPosition) => {
     const letters = 'abcdefgh';
@@ -54,9 +56,6 @@ export const saveGameState = (board) => {
         selectedElementSquare: board.selectedElement ? board.selectedElement.squareId : null // You might need to handle serialization for this
     };
 
-    console.log(gameState.whitePiecesKilled)
-    console.log(gameState.blackPiecesKilled);
-
     localStorage.setItem('existingGameState', JSON.stringify(gameState));
 }
 
@@ -108,7 +107,8 @@ const createPlainPieceObject = (piece) => {
         killCount: piece.killCount,
         ranksAdvanced: piece.ranksAdvanced,
         limitations: piece.limitations,
-        squareId: piece.squareId
+        squareId: piece.squareId,
+        numberOfMostRecentMove: piece.numberOfMostRecentMove
     };
 };
 
@@ -119,6 +119,7 @@ const revivePiece = (pieceData) => {
     piece.ranksAdvanced =  pieceData.ranksAdvanced,
     piece.limitations =  pieceData.limitations,
     piece.squareId =  pieceData.squareId
+    piece.numberOfMostRecentMove = pieceData.numberOfMostRecentMove
 
     return piece;
 }
@@ -188,4 +189,25 @@ function setPiece(row, col, button, pieceSymbols, pieceClass) {
         button.id = `pawn${col + 1}-${isBlack ? 'black' : 'white'}`;
     }
 }
+
+export const setUpGame = () => {
+    localStorage.removeItem('existingGameState');
+    clearTakenPieces();
+    showGameAndHideWelcome();
+    createChessBoard();
+    new BoardSetup();
+    let board = new Board();
+}
+
+export const showGameAndHideWelcome = () => {
+    updateElementDisplay('game', 'flex');
+    updateElementDisplay('start-game', 'none');
+    updateElementDisplay('game-over', 'none');
+}
+
+export const clearTakenPieces = () => {
+    document.querySelector('.taken-pieces-black-list').innerHTML = '';
+    document.querySelector('.taken-pieces-white-list').innerHTML = '';
+}
+
 
