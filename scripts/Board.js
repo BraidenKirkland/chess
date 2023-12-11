@@ -1,6 +1,6 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
 import { MoveValidator } from "./MoveValidator.js";
-import { getNumericPosition, getRegularPosition, saveGameState, retrieveGameState, createChessBoard } from "./helpers.js";
+import { getNumericPosition, getRegularPosition, saveGameState, retrieveGameState } from "./helpers.js";
 import { GameUIManager } from "./GameUIManager.js";
 
 export class Board {

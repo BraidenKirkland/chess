@@ -1,5 +1,3 @@
-import { createChessBoard } from './helpers.js';
-
 export class BoardSetup {
 
     constructor() {

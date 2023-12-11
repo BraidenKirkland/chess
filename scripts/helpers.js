@@ -128,7 +128,7 @@ export const updateElementDisplay = (className, displayType) => {
     document.querySelector(`.${className}`).style.display = displayType;
 }
 
-export function createChessBoard() {
+export function createStartingChessBoard() {
     const boardElement = document.getElementById('board');
     boardElement.innerHTML = ''; // Clear existing board content
 
@@ -202,7 +202,7 @@ export const setUpGame = () => {
 }
 
 export const setUpBoard= () => {
-    createChessBoard();
+    createStartingChessBoard();
     new BoardSetup();
     new Board();
 }
