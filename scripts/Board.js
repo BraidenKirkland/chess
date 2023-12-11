@@ -1,22 +1,21 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
 import { MoveValidator } from "./MoveValidator.js";
 import { getNumericPosition, getRegularPosition, saveGameState, retrieveGameState, createChessBoard } from "./helpers.js";
-import { UIManager } from "./UIManager.js";
+import { GameUIManager } from "./GameUIManager.js";
 
 export class Board {
 
     constructor() {
         this.moveValidator = new MoveValidator();
-        this.uiManager = new UIManager();
+        this.gameUiManager = new GameUIManager();
         this.setUpGame();
 
-        this.uiManager.setupEventListeners(this.handleButtonClick.bind(this));
-        this.uiManager.setupPromotionEventListeners(this.handlePromotionSelection.bind(this));
+        this.gameUiManager.setupEventListeners(this.handleButtonClick.bind(this));
+        this.gameUiManager.setupPromotionEventListeners(this.handlePromotionSelection.bind(this));
     }
 
     setUpGame() {
         if (! localStorage.getItem('existingGameState')) {
-            console.log('no existing game state found');
             this.initializeNewGame();
             return;
         }
@@ -32,7 +31,7 @@ export class Board {
             }
         }
 
-        this.uiManager.showTakenPiecesAfterGameLoad(this.whitePiecesKilled, this.blackPiecesKilled);
+        this.gameUiManager.showTakenPiecesAfterGameLoad(this.whitePiecesKilled, this.blackPiecesKilled);
     }
 
     initializeNewGame() {
@@ -56,7 +55,7 @@ export class Board {
 
         if(this.moveValidator.inCheck(this.turn, this.squares, this.numMovesMade)) {
             const kingPosition = this.moveValidator.getKingPosition(this.turn, this.squares);
-             this.uiManager.shakePiece(kingPosition);
+             this.gameUiManager.shakePiece(kingPosition);
         }
     }
 
@@ -129,7 +128,7 @@ export class Board {
         const neighborSquare = this.getNeighborSquareForEnPassant(takingPawn, diagonalSquare);
         this.movePieceToEmpty(takingPawn, diagonalSquare);
         this.squares[neighborSquare] = null;
-        this.uiManager.updateBoardAfterEnPassantTake(takingPawn, neighborSquare);
+        this.gameUiManager.updateBoardAfterEnPassantTake(takingPawn, neighborSquare);
     }
 
     getNeighborSquareForEnPassant(takingPawn, diagonalSquare) {
@@ -144,7 +143,7 @@ export class Board {
     movePieceToEmpty(pieceToMove, newPosition, castling = false) {
         const squareIdofPiece = pieceToMove.squareId.slice();
 
-        this.uiManager.updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece);
+        this.gameUiManager.updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece);
         this.squares[newPosition] = pieceToMove;
         this.squares[squareIdofPiece] = null;
         this.numMovesMade++;
@@ -167,7 +166,7 @@ export class Board {
             pieceToMove.ranksAdvanced += verticalDistance;
 
             if (pieceToMove.canPromote()) {
-                this.uiManager.showPromotionMenu(pieceToMove.color)
+                this.gameUiManager.showPromotionMenu(pieceToMove.color)
                 return true;
             }
         }
@@ -192,11 +191,11 @@ export class Board {
         killingPiece.moveCount++;
         killingPiece.ranksAdvanced++;
 
-        this.uiManager.updateBoardAfterTake(victimSquareId, killingSquareId);
-        this.uiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
+        this.gameUiManager.updateBoardAfterTake(victimSquareId, killingSquareId);
+        this.gameUiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
 
         if (killingPiece.canPromote()) {
-            this.uiManager.showPromotionMenu(killingPiece.color)
+            this.gameUiManager.showPromotionMenu(killingPiece.color)
 
             return true;
         }
@@ -211,7 +210,7 @@ export class Board {
 
         const squareId = this.getClickedSquareId(eventObject);
         const clickedPiece = this.getClickedPiece(squareId);
-        const parentElementOfButton = this.uiManager.getParentElementOfButton(squareId);
+        const parentElementOfButton = this.gameUiManager.getParentElementOfButton(squareId);
         const validMoves = this.getValidMovesForPiece(clickedPiece, squareId);
 
         this.processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves);
@@ -220,7 +219,7 @@ export class Board {
 
         if(checkmate || stalemate) {
             const winningColor = this.moveValidator.opposingColor(this.turn);
-            this.uiManager.showGameOverMenu(winningColor, checkmate);
+            this.gameUiManager.showGameOverMenu(winningColor, checkmate);
         }
     }
 
@@ -283,12 +282,12 @@ export class Board {
         this.selectedElement = clickedPiece;
 
         // Highlight square of clicked piece and its valid moves
-        this.uiManager.showHighlightingForClickedPieceAndMoves(parentElementOfButton, 'pink', validMoves);
+        this.gameUiManager.showHighlightingForClickedPieceAndMoves(parentElementOfButton, 'pink', validMoves);
     }
 
     handleClickOnSelectedPiece(parentElementOfButton, validMoves) {
         // Remove highlighting
-        this.uiManager.removeHighlightForPiece(parentElementOfButton, validMoves);
+        this.gameUiManager.removeHighlightForPiece(parentElementOfButton, validMoves);
 
         // indicate no element selected
         this.selectedElement = null;
@@ -304,7 +303,7 @@ export class Board {
             return;
         }
 
-        this.uiManager.removeHighlightingWhenMovingPieceToEmptySquare(parentElementOfButton, previousParentElement, validMovesOfPrevious);
+        this.gameUiManager.removeHighlightingWhenMovingPieceToEmptySquare(parentElementOfButton, previousParentElement, validMovesOfPrevious);
 
         // Perform en Passant if it is allowed
         if (this.selectedElement.type === 'pawn' && this.moveValidator.enPassantAllowed(this.selectedElement, squareId, this.squares, this.numMovesMade)) {
@@ -322,8 +321,8 @@ export class Board {
             return;
         }
 
-        this.uiManager.removeHighlightForPiece(previousParentElement, validMovesOfPrevious)
-        this.uiManager.showHighlightingForClickedPieceAndMoves(parentElementOfButton, 'pink', validMoves);
+        this.gameUiManager.removeHighlightForPiece(previousParentElement, validMovesOfPrevious)
+        this.gameUiManager.showHighlightingForClickedPieceAndMoves(parentElementOfButton, 'pink', validMoves);
 
         // Check if the user indicated they wanted to castle and if so perform the castle if it is valid
         if (this.isCastlingMove(clickedPiece)) {
@@ -333,14 +332,14 @@ export class Board {
                 this.castle(clickedPiece, this.selectedElement);
             }
 
-            this.uiManager.removeHighlightForPiece(parentElementOfButton, validMoves)
+            this.gameUiManager.removeHighlightForPiece(parentElementOfButton, validMoves)
 
             return;
         }
         
         if (validMovesOfPrevious.includes(squareId)) {
             if (this.takePiece(this.selectedElement, clickedPiece)) {
-                this.uiManager.removeHighlightForPiece(parentElementOfButton, validMoves)
+                this.gameUiManager.removeHighlightForPiece(parentElementOfButton, validMoves)
             }
 
             this.selectedElement = null;  // BAK
@@ -371,8 +370,8 @@ export class Board {
         promotedPiece.squareId = squareId;
 
         this.squares[squareId] = promotedPiece;
-        this.uiManager.updateSquareWithPromotedPiece(squareId, promotedPiece);
-        this.uiManager.hidePromotionMenu(color);
+        this.gameUiManager.updateSquareWithPromotedPiece(squareId, promotedPiece);
+        this.gameUiManager.hidePromotionMenu(color);
 
         this.changeTurn();
     }

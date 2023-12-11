@@ -1,10 +1,10 @@
 import { piecesToSymbols } from "./helpers.js";
 import { setUpGame } from './helpers.js';
 
-export class UIManager {
+export class GameUIManager {
 
     constructor() {
-        this.setUpGameOverEventListeners();
+        this.setUpButtonEventListeners();
     }
     
     getBoardPieces() {
@@ -276,9 +276,7 @@ export class UIManager {
         document.querySelector('.game-over-type').innerText = reasonForGameOver + '!';
     }
 
-    setUpGameOverEventListeners() {
-        // document.getElementById('newGameButton').addEventListener('click', () => {
-        //     setUpGame();
-        // })
+    setUpButtonEventListeners() {
+        
     }
 }

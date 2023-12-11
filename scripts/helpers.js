@@ -190,13 +190,21 @@ function setPiece(row, col, button, pieceSymbols, pieceClass) {
     }
 }
 
-export const setUpGame = () => {
+export const setUpNewGame = () => {
     localStorage.removeItem('existingGameState');
+    setUpGame();
+}
+
+export const setUpGame = () => {
     clearTakenPieces();
     showGameAndHideWelcome();
+    setUpBoard();
+}
+
+export const setUpBoard= () => {
     createChessBoard();
     new BoardSetup();
-    let board = new Board();
+    new Board();
 }
 
 export const showGameAndHideWelcome = () => {
@@ -208,6 +216,10 @@ export const showGameAndHideWelcome = () => {
 export const clearTakenPieces = () => {
     document.querySelector('.taken-pieces-black-list').innerHTML = '';
     document.querySelector('.taken-pieces-white-list').innerHTML = '';
+}
+
+export const clearLocalStorageItem = (key) => {
+    localStorage.removeItem(key);
 }
 
 
