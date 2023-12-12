@@ -29,26 +29,20 @@ html, body {
     color: white;
 }
 
-.taken-pieces-black {
-    text-align: center;
-    margin-left: 75px;
-}
-
-.taken-pieces-white {
-    text-align: center;
-    margin-right: 75px;
-}
-
-@media screen and (max-width: 1180px) {
-    .taken-pieces-black {
-        margin-right: 20px;
-    }
-
-    .taken-pieces-white {
-        margin-left: 20px;
+@media screen and (max-width: 1075px) {
+    .taken-pieces-black, .taken-pieces-white {
+        display: none;
     }
 }
 
+@media screen and (min-width: 1076px) {
+    .taken-pieces-black, .taken-pieces-white {
+        display: block;
+        text-align: center;
+        margin-left: 3vw;
+        margin-right: 3vw;
+    }
+}
 
 .board-title-reset {
     display: flex;
@@ -320,7 +314,6 @@ td.light-square, td.dark-square{
     color: white;
     font-size: 2.5vw;
     font-weight: bold;
-    /* background-color: black; */
     width: 100%;
     height: 5vw;
     text-align: center;
