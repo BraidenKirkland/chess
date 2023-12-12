@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 html, body {
     width: 100%;
     height: 100%;
@@ -180,7 +184,6 @@ tr.even-row, tr.odd-row {
     height: 11.11%
 }
 
-
 tr.label-row, td.label-cell {
     background-color: brown;
     border: none;
@@ -188,8 +191,14 @@ tr.label-row, td.label-cell {
 
 td.number {
     width: 2.22%;
-    padding: 0;
+    font-size: 1.5vw;
+    font-weight: 500;
     overflow: hidden;
+}
+
+td.letter {
+    font-size: 1.5vw;
+    font-weight: 500;
 }
 
 td.light-square, td.dark-square{
@@ -202,7 +211,7 @@ td.light-square, td.dark-square{
 .piece, .empty{
     margin: 0;
     padding: 0;
-    font-size: 3.5em;
+    font-size: 3.5vw;
     border: 0;
     background-color: transparent;
     width: 100%;
