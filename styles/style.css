@@ -60,8 +60,10 @@ html, body {
 #board {
    width: 600px;
    height: 600px;
-   background-color: white;
+   background-color: brown;
    margin: auto;
+   border-radius: 5px;
+   border-collapse: collapse;
 }
 
 .confirm-reset {
@@ -162,7 +164,17 @@ html, body {
     border-radius: 5px;
 }
 
-td{
+td {
+    text-align: center;
+    border: none;
+}
+
+tr.label-row, td.label-cell {
+    background-color: brown;
+    border: none;
+}
+
+td.light-square, td.dark-square{
     width: 12.5%;
     height: 12.5%;
     text-align: center;
