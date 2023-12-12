@@ -145,9 +145,9 @@ export const setUpBoard= () => {
 }
 
 export const showGameAndHideWelcome = () => {
-    updateElementDisplay('game', 'flex');
     updateElementDisplay('start-game', 'none');
     updateElementDisplay('game-over', 'none');
+    updateElementDisplay('game', 'flex');
 }
 
 export const clearTakenPieces = () => {
