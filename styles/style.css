@@ -98,10 +98,10 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 700px;
-    height: 200px;
-    background-color: white;
-    margin: 0;
+    width: 50vw;
+    max-height: 200px;
+    margin: auto;
+    padding-bottom: 1.5vw;
     top: 50%;
     left: 50%;
     position: absolute;
@@ -109,40 +109,56 @@ html, body {
     transform: translate(-50%, -50%);
     border-radius: 10px;
     visibility: hidden;
+    background-color: rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    color: #ebe1dc;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.confirm-reset-title {
+    font-size: 2.5vw;
 }
 
 .reset-menu-buttons {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    width: 50%;
+    width: 75%;
 }
 
 #quit-reset, #final-reset {
-    width: 9rem;
-    height: 3rem;
+    width: 10vw;
+    height: 3vw;
+    font-size: 1.0vw;
     margin-top: 30px;
     font-weight: bold;
     color: white;
-    border: none;
     border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(to top, #3b3b3b, #5b5b5b);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
 #quit-reset {
-    background-color: rgb(47, 47, 205);
+    background: linear-gradient(to top, rgb(47, 47, 205), rgb(70, 70, 230));
 }
 
 #quit-reset:hover {
-    background-color: rgb(59, 59, 170);
+    background: linear-gradient(to top, rgb(59, 59, 170), rgb(82, 82, 195));
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
     cursor: pointer;
 }
 
 #final-reset {
-    background-color: rgb(206, 57, 57);
+    background: linear-gradient(to top, rgb(206, 57, 57), rgb(230, 77, 77));
 }
 
 #final-reset:hover {
-    background-color: rgb(195, 77, 77);
+    background: linear-gradient(to top, rgb(195, 77, 77), rgb(219, 97, 97));
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
     cursor: pointer;
 }
 
@@ -398,10 +414,10 @@ td.light-square, td.dark-square{
     color: white;
     background-color: rgb(45, 50, 50);
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.2); /* Light border on top */
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6), /* Shadow for depth */
-                 0px -1px 1px rgba(255, 255, 255, 0.2), /* Light source illusion */
-                 0px 1px 1px rgba(0, 0, 0, 0.4); /* Bottom border shadow */
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6), 
+                 0px -1px 1px rgba(255, 255, 255, 0.2), 
+                 0px 1px 1px rgba(0, 0, 0, 0.4); 
     cursor: pointer;
     transition: all 0.2s ease;
 }
