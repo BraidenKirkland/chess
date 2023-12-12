@@ -407,15 +407,39 @@ td.light-square, td.dark-square{
 }
 
 .winner-content {
-    width: 25%;
-    display: flex;
-    flex-direction: flex-row;
-    justify-content: space-between;
-    align-items: center;
+    width: 50%;
 }
 
-.winner-king {
-    font-size: 2rem;
+@media screen and (min-width: 851px) {
+    .winner-content {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 2vw;
+    }
+
+    .winner-king {
+        font-size: 2.5vw;
+    }
+}
+
+@media screen and (max-width: 850px) {
+    .winner-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2vw;
+    }
+
+    .winner-king {
+        font-size: 3.5vw;
+    }
+}
+
+.winner-color {
+    font-size: 2.5vw;
 }
 
 .game-over-buttons {
