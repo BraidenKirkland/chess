@@ -1,6 +1,6 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
 import { MoveValidator } from "./MoveValidator.js";
-import { getNumericPosition, getRegularPosition, saveGameState, retrieveGameState } from "./helpers.js";
+import { getNumericPosition, getRegularPosition, saveGameState } from "./helpers.js";
 import { GameUIManager } from "./GameUIManager.js";
 
 export class Board {
@@ -8,6 +8,10 @@ export class Board {
     constructor() {
         this.moveValidator = new MoveValidator();
         this.gameUiManager = new GameUIManager();
+
+        // Keep track of each square on the board
+        this.squares = {};
+        
         this.setUpGame();
         this.gameUiManager.indicateTurn(this.turn);
 
@@ -21,17 +25,8 @@ export class Board {
             return;
         }
 
-        retrieveGameState(this);
-
-        for (const [squareId, piece] of Object.entries(this.squares)) {
-            const squareElement = document.querySelector(`.${squareId}`);
-            if(piece) {
-                squareElement.innerHTML = `<button class="piece ${squareId}">${piece.getSymbol()}</button>`;
-            }else {
-                squareElement.innerHTML = `<button class="empty ${squareId}"></button>`;
-            }
-        }
-
+        this.retrieveGameState();
+        this.gameUiManager.addCorrectButtonsToBoard(this.squares);
         this.gameUiManager.showTakenPiecesAfterGameLoad(this.whitePiecesKilled, this.blackPiecesKilled);
     }
 
@@ -44,9 +39,6 @@ export class Board {
 
         // Keep count of how many moves have been made throughout the entire game
         this.numMovesMade = 0;
-
-        // Keep track of each square on the board
-        this.squares = {};
         this.initializeBoard();
     }
 
@@ -129,9 +121,11 @@ export class Board {
 
     enPassantTake(takingPawn, diagonalSquare) {
         const neighborSquare = this.getNeighborSquareForEnPassant(takingPawn, diagonalSquare);
+        const victimPiece = this.squares[neighborSquare];
         this.movePieceToEmpty(takingPawn, diagonalSquare);
         this.squares[neighborSquare] = null;
         this.gameUiManager.updateBoardAfterEnPassantTake(takingPawn, neighborSquare);
+        this.gameUiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
     }
 
     getNeighborSquareForEnPassant(takingPawn, diagonalSquare) {
@@ -160,7 +154,7 @@ export class Board {
             return;
         }
 
-        this.changeTurn();
+        // this.changeTurn();
     }
 
     handlePromotion(pieceToMove, newPosition, squareIdofPiece) {
@@ -310,6 +304,8 @@ export class Board {
         } else {
             this.movePieceToEmpty(this.selectedElement, squareId);
         }
+
+        this.changeTurn();
     }
 
     handleClickOnDifferentPiece(clickedPiece, squareId, parentElementOfButton, validMoves) {
@@ -388,5 +384,40 @@ export class Board {
         if (lastPiece && lastPiece.piece.canPromote()) {
             this.promotePiece(lastPiece.squareId, typeOfPiece, colorOfPiece);
         }
+    }
+
+    retrieveGameState() {
+        const gameState = JSON.parse(localStorage.getItem('existingGameState'));
+        const loadedSquares = gameState.squares;
+
+        for (const [position, pieceData] of Object.entries(loadedSquares)) {
+            if (pieceData) {
+                this.squares[position] = this.revivePiece(pieceData);
+            } else {
+                this.squares[position] = null;
+            }
+        }
+
+        this.turn = gameState.turn;
+        this.numMovesMade = gameState.numMovesMade;
+        this.whitePiecesKilled = gameState.whitePiecesKilled;
+        this.blackPiecesKilled = gameState.blackPiecesKilled;
+        this.selectedElement = null;
+        if (gameState.selectedElementSquare) {
+            this.selectedElement = this.squares[gameState.selectedElementSquare]
+        }
+    }
+
+    revivePiece(pieceData) {
+        const piece = createPiece(pieceData.color, pieceData.type);
+
+        piece.moveCount = pieceData.moveCount;
+        piece.killCount = pieceData.killCount;
+        piece.ranksAdvanced = pieceData.ranksAdvanced;
+        piece.limitations = pieceData.limitations;
+        piece.squareId = pieceData.squareId;
+        piece.numberOfMostRecentMove = pieceData.numberOfMostRecentMove;
+
+        return piece;
     }
 }

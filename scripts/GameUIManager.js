@@ -88,13 +88,6 @@ export class GameUIManager {
         const colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
         takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
 
-        // Updating UI for taken pieces list
-        if (takingPawn.color === 'white') {
-            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
-        } else {
-            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
-        }
-
         // Get <button> of pawn to be removed
         const takenButton = document.getElementsByClassName(neighborSquare)[1];
 
@@ -290,5 +283,17 @@ export class GameUIManager {
         }
 
         document.querySelector('.turn').textContent = "Black's Turn";
+    }
+
+    addCorrectButtonsToBoard(squares) {
+        for (const [squareId, piece] of Object.entries(squares)) {
+            const squareElement = document.querySelector(`.${squareId}`);
+
+            if (piece) {
+                squareElement.innerHTML = `<button class="piece ${squareId}">${piece.getSymbol()}</button>`;
+            } else {
+                squareElement.innerHTML = `<button class="empty ${squareId}"></button>`;
+            }
+        }
     }
 }
