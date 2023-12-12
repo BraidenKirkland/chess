@@ -2,11 +2,6 @@ import { piecesToSymbols } from "./helpers.js";
 import { setUpGame } from './helpers.js';
 
 export class GameUIManager {
-
-    constructor() {
-        this.setUpButtonEventListeners();
-    }
-    
     getBoardPieces() {
         return [...document.querySelectorAll(".piece, .empty")];
     }
@@ -261,11 +256,19 @@ export class GameUIManager {
         }, 1500);
     }
     
-    showGameOverMenu(winningColor, checkmate) {
+    showGameOverMenu(winningColor, checkmate, stalemate, draw) {
         document.querySelector('.game-over').style.display = 'block';
         document.querySelector('.game').style.display = 'none';
 
-        const reasonForGameOver = checkmate ? 'Checkmate' : 'Stalemate';
+        let reasonForGameOver;
+        if(checkmate) {
+            reasonForGameOver = 'Checkmate';
+        }else if(stalemate) {
+            reasonForGameOver = 'Stalemate';
+        }else {
+            reasonForGameOver = 'Draw';
+        }
+
 
         if(checkmate) {
             const capitalizedWinningColor = winningColor.charAt(0).toUpperCase() + winningColor.slice(1);

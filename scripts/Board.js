@@ -217,24 +217,20 @@ export class Board {
 
         this.processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves);
 
-        const [checkmate, stalemate] = this.checkMateOrStaleMate();
+        const [checkmate, stalemate, draw] = this.checkmateStalemateOrDraw();
 
-        if(checkmate || stalemate) {
+        if(checkmate || stalemate || draw) {
             const winningColor = this.moveValidator.opposingColor(this.turn);
-            this.gameUiManager.showGameOverMenu(winningColor, checkmate);
+            this.gameUiManager.showGameOverMenu(winningColor, checkmate, stalemate, draw);
         }
     }
 
-    checkMateOrStaleMate() {
+    checkmateStalemateOrDraw() {
         const checkmate = this.moveValidator.isCheckMate(this.turn, this.squares, this.numMovesMade);
         const stalemate = this.moveValidator.isStaleMate(this.turn, this.squares, this.numMovesMade);
+        const draw      = this.moveValidator.isDraw(this);
 
-        return [checkmate, stalemate];
-    }
-
-    isGameOver() {
-        return this.moveValidator.isCheckMate(this.turn, this.squares, this.numMovesMade) 
-        || this.moveValidator.isStaleMate(this.turn, this.squares, this.numMovesMade);
+        return [checkmate, stalemate, draw];
     }
 
     getClickedSquareId(eventObject) {

@@ -642,5 +642,15 @@ export class MoveValidator {
 
         return dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0);
     }
+
+    isDraw(board) {
+        if(board.whitePiecesKilled.length === 15 && board.blackPiecesKilled.length === 15) {
+            if (this.getKingPosition('white', board.squares) && this.getKingPosition('black', board.squares)) {
+                return true
+            }
+        }
+
+        return false;
+    }
 }
 
