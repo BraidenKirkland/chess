@@ -169,14 +169,22 @@ td {
     border: none;
 }
 
+tr.label-row {
+    height: 20px;
+}
+
+tr.even-row, tr.odd-row {
+    height: 70px;
+}
+
 tr.label-row, td.label-cell {
     background-color: brown;
     border: none;
 }
 
 td.light-square, td.dark-square{
-    width: 12.5%;
-    height: 12.5%;
+    width: 70px;
+    height: 100%;
     text-align: center;
     padding: 0;
 }
