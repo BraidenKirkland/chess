@@ -7,7 +7,7 @@ html, body {
     height: 100%;
     position: relative;
     font-family: Arial, Helvetica, sans-serif;
-    background-color: rgb(47, 46, 43);
+    background: radial-gradient(circle, #2f2e2b, #1e1d1b);
 }
 
 .game {
@@ -30,10 +30,12 @@ html, body {
 }
 
 .taken-pieces-black {
+    text-align: center;
     margin-left: 75px;
 }
 
 .taken-pieces-white {
+    text-align: center;
     margin-right: 75px;
 }
 
@@ -63,12 +65,16 @@ html, body {
     border: none;
     border-radius: 10px;
     background-color: rgb(190, 76, 76);
-
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.4s ease;
+    cursor: pointer;
+    font-family: 'Arial', sans-serif;
 }
 
 #reset:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
     cursor: pointer;
-    background-color: rgb(211, 112, 112);
+    background-color: rgb(205, 101, 101);
 }
 
 .taken-pieces-black-list, .taken-pieces-white-list {
@@ -78,8 +84,10 @@ html, body {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    background-color: rgb(223, 219, 219);
+    background-color: rgba(223, 219, 219, 0.7);
     border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #board {
@@ -87,7 +95,6 @@ html, body {
     height: 80vw;
     max-width: 600px;
     max-height: 600px;
-    background-color: brown;
     margin: auto;
     border-radius: 5px;
     border-collapse: collapse;
@@ -206,20 +213,22 @@ tr.even-row, tr.odd-row {
 }
 
 tr.label-row, td.label-cell {
-    background-color: brown;
     border: none;
 }
 
 td.number {
     width: 2.22%;
-    font-size: 1.5vw;
+    font-size: 1.25vw;
     font-weight: 500;
     overflow: hidden;
+    color: white;
+    padding: 0 5px;
 }
 
 td.letter {
-    font-size: 1.5vw;
+    font-size: 1.25vw;
     font-weight: 500;
+    color: white;
 }
 
 td.light-square, td.dark-square{

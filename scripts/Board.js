@@ -9,6 +9,7 @@ export class Board {
         this.moveValidator = new MoveValidator();
         this.gameUiManager = new GameUIManager();
         this.setUpGame();
+        this.gameUiManager.indicateTurn(this.turn);
 
         this.gameUiManager.setupEventListeners(this.handleButtonClick.bind(this));
         this.gameUiManager.setupPromotionEventListeners(this.handlePromotionSelection.bind(this));
