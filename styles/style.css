@@ -322,13 +322,22 @@ td.light-square, td.dark-square{
 }
 
 .game-over-content, .start-game-content {
-    width: 75%;
-    height: 75vw;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     border-radius: 10px;
+}
+
+.start-game-content {
+    width: 75%;
+    height: 75vw;
+}
+
+.game-over-content {
+    width: 50vw;
+    height: 50vw;
+
 }
 
 .game-over-title, .start-game-title {
@@ -344,7 +353,14 @@ td.light-square, td.dark-square{
     padding-top: 1vw;
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
-    border-bottom: 2px solid white;
+    border-bottom: 1px solid white;
+}
+
+.game-over-title {
+        background-color: rgba(255, 255, 255, 0.1);
+    /* box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); */
+    color: #f3dcd1;;
+    text-shadow: 1px 1px 2px #000;
 }
 
 .start-game-title, .start-game-buttons {
@@ -355,21 +371,26 @@ td.light-square, td.dark-square{
 }
 
 .game-over-type {
-    color: white;
+    /* color: white; */
     font-weight: bold;
-    background-color: rgb(47, 45, 45);
+    /* background-color: rgb(47, 45, 45); */
     width: 100%;
     text-align: center;
     margin-top: 0px;
     margin-bottom: 0px;
     padding-bottom: 1rem;
     padding-top: 1rem;
+
+    background-color: rgba(255, 255, 255, 0.1);
+    /* box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); */
+    color: #f3dcd1;
+    text-shadow: 1px 1px 2px #000;
 }
 
 .winner {
-    color: white;
+    /* color: white; */
     font-weight: bold;
-    background-color: rgb(47, 45, 45);
+    /* background-color: rgb(47, 45, 45); */
     width: 100%;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -379,6 +400,10 @@ td.light-square, td.dark-square{
     flex-direction: row;
     justify-content: center;
     font-size: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    /* box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); */
+    color: #f3dcd1;
+    text-shadow: 1px 1px 2px #000;
 }
 
 .winner-content {
@@ -391,6 +416,13 @@ td.light-square, td.dark-square{
 
 .winner-king {
     font-size: 2rem;
+}
+
+.game-over-buttons {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #f3dcd1;
+    text-shadow: 1px 1px 2px #000;
+    border-top: 1px solid white;
 }
 
 .game-over-buttons, .start-game-buttons {
