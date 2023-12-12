@@ -44,6 +44,7 @@ export class Board {
 
     changeTurn() {
         this.turn = (this.turn === 'white' ? 'black' : 'white');
+        
         saveGameState(this);
 
         if(this.moveValidator.inCheck(this.turn, this.squares, this.numMovesMade)) {
