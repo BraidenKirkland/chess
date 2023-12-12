@@ -58,12 +58,14 @@ html, body {
 }
 
 #board {
-   width: 600px;
-   height: 600px;
-   background-color: brown;
-   margin: auto;
-   border-radius: 5px;
-   border-collapse: collapse;
+    width: 80vw;
+    height: 80vw;
+    max-width: 600px;
+    max-height: 600px;
+    background-color: brown;
+    margin: auto;
+    border-radius: 5px;
+    border-collapse: collapse;
 }
 
 .confirm-reset {
@@ -170,21 +172,29 @@ td {
 }
 
 tr.label-row {
-    height: 20px;
+    height: 2.22%;
+    padding: 0;
 }
 
 tr.even-row, tr.odd-row {
-    height: 70px;
+    height: 11.11%
 }
+
 
 tr.label-row, td.label-cell {
     background-color: brown;
     border: none;
 }
 
+td.number {
+    width: 2.22%;
+    padding: 0;
+    overflow: hidden;
+}
+
 td.light-square, td.dark-square{
-    width: 70px;
-    height: 100%;
+    width: 11.11%;
+    max-height: 11.11%;
     text-align: center;
     padding: 0;
 }
@@ -197,6 +207,7 @@ td.light-square, td.dark-square{
     background-color: transparent;
     width: 100%;
     height: 100%;
+    line-height: 1;
 }
 
 .piece:hover, .empty:hover, .promo:hover{
@@ -227,8 +238,8 @@ td.light-square, td.dark-square{
 }
 
 .shake {
-  animation: shake 0.5s; /* Adjust timing to your liking */
-  animation-iteration-count: infinite; /* Use a finite number for a temporary shake */
+  animation: shake 0.5s;
+  animation-iteration-count: infinite;
 }
 
 .game-over, .start-game {
@@ -238,16 +249,10 @@ td.light-square, td.dark-square{
     padding: 0px;
 }
 
-/* Temporary */
 .start-game {
     display: block;
 }
 
-/* .game-over {
-    display: block;
-} */
-
-/* Temporary */
 .game {
     display: none;
 }
@@ -359,11 +364,11 @@ td.light-square, td.dark-square{
 }
 
 #newGameButton:hover, #mainMenuButton:hover, #startGameButton:hover {
-    background-color: rgb(60, 65, 65); /* Lighter shade for hover */
+    background-color: rgb(60, 65, 65);
 }
 
 #newGameButton:active, #mainMenuButton:active, #startGameButton:active {
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Inset shadow for a pressed effect */
-    transform: translateY(2px); /* Slightly shifts the button down */
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    transform: translateY(2px);
     border: 2px solid white;
 }

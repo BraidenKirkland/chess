@@ -67,6 +67,7 @@ export class BoardSetup {
         for(const letter of letters) {
             const letterCell = document.createElement('td')
             letterCell.classList.add('label-cell');
+            letterCell.classList.add('letter');
             letterCell.textContent = letter;
             letterRow.appendChild(letterCell);
         }
@@ -77,6 +78,7 @@ export class BoardSetup {
     addNumberCellToBoardRow(boardRow, value) {
         const numberCell = document.createElement('td');
         numberCell.classList.add('label-cell');
+        numberCell.classList.add('number');;
         numberCell.textContent = String(value);
         boardRow.appendChild(numberCell);
     }
