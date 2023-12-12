@@ -1,7 +1,7 @@
 import { ButtonUIManager } from "./ButtonUIManager.js";
 import { Board } from "./Board.js";
 import { BoardSetup } from "./BoardSetup.js";
-import { createStartingChessBoard, setUpNewGame, showGameAndHideWelcome, clearTakenPieces } from './helpers.js';
+import { setUpNewGame, showGameAndHideWelcome, clearTakenPieces } from './helpers.js';
 
 export class App {
     constructor() {
@@ -15,7 +15,6 @@ export class App {
                 showGameAndHideWelcome();
             }
 
-            createStartingChessBoard();
             new BoardSetup();
             new Board();
         });
@@ -37,7 +36,6 @@ export class App {
             this.buttonUiManager.hideResetModalAndShowBoard();
 
             clearTakenPieces()
-            createStartingChessBoard();
             new BoardSetup();
             new Board();
         });
