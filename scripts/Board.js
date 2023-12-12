@@ -57,6 +57,8 @@ export class Board {
             const kingPosition = this.moveValidator.getKingPosition(this.turn, this.squares);
              this.gameUiManager.shakePiece(kingPosition);
         }
+
+        this.gameUiManager.indicateTurn(this.turn);
     }
 
     initializeBoard() {

@@ -279,4 +279,13 @@ export class GameUIManager {
     setUpButtonEventListeners() {
         
     }
+
+    indicateTurn(turn) {
+        if(turn === 'white') {
+            document.querySelector('.turn').textContent = "White's Turn";
+            return;
+        }
+
+        document.querySelector('.turn').textContent = "Black's Turn";
+    }
 }

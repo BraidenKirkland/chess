@@ -18,6 +18,13 @@ html, body {
 
 #boardScreenTitle, #takeBlackPiecesTitle, #takenWhitePiecesTitle {
     color: white;
+    margin-bottom: 10px;
+}
+
+.turn {
+    margin-top: 5px;
+    margin-bottom: 2px;
+    color: white;
 }
 
 .taken-pieces-black {
