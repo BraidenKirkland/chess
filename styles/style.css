@@ -14,6 +14,8 @@ html, body {
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
+    align-items: center;
+    margin: 30px;
 }
 
 #boardScreenTitle, #takeBlackPiecesTitle, #takenWhitePiecesTitle {
@@ -34,6 +36,17 @@ html, body {
 .taken-pieces-white {
     margin-right: 75px;
 }
+
+@media screen and (max-width: 1180px) {
+    .taken-pieces-black {
+        margin-right: 20px;
+    }
+
+    .taken-pieces-white {
+        margin-left: 20px;
+    }
+}
+
 
 .board-title-reset {
     display: flex;
@@ -59,11 +72,12 @@ html, body {
 }
 
 .taken-pieces-black-list, .taken-pieces-white-list {
+    min-height: 10vw;
+    max-width: 18vw;
     font-size: 2.5em;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: wrap;
-    height: 50%;
     background-color: rgb(223, 219, 219);
     border-radius: 8px;
 }
