@@ -197,7 +197,7 @@ export class GameUIManager {
     }
 
     updateSquareWithPromotedPiece(squareId, piece) {
-        const symbol = piecesToSymbols[piece.type][piece.color];
+        const symbol = piece.getSymbol();
         const squareButton = document.querySelector(`button.${squareId}`)
         squareButton.innerHTML = symbol;
     }
