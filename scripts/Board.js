@@ -450,7 +450,7 @@ export class Board {
             squares: plainSquaresObject,
             whitePiecesKilled: this.whitePiecesKilled,
             blackPiecesKilled: this.blackPiecesKilled,
-            selectedElementSquare: this.selectedElement ? this.selectedElement.squareId : null // You might need to handle serialization for this
+            selectedElementSquare: this.selectedElement ? this.selectedElement.squareId : null
         };
 
         localStorage.setItem('existingGameState', JSON.stringify(gameState));
