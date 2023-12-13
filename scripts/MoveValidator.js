@@ -338,8 +338,7 @@ export class MoveValidator {
                 return false;
             }
         }
-
-        console.log('STALEMATE !!!!');
+        
         // No legal moves for any piece, it's a stalemate
         return true;
     }
