@@ -44,34 +44,17 @@ export class GameUIManager {
     }
 
     updateBoardAfterTake(victimSquareId, killingSquareId) {
-        const dstSquareList = document.getElementsByClassName(victimSquareId);
-        const dstSquareTableCell = dstSquareList[0];
-        const dstSquareButton = dstSquareList[1];
+        const dstSquareTableCell = document.querySelector(`td.${victimSquareId}`);
+        const dstSquareButton = document.querySelector(`button.${victimSquareId}`);
 
-        const currentSquareList = document.getElementsByClassName(killingSquareId);
-        const currentSquareTableCell = currentSquareList[0];
-        const currentSquareButton = currentSquareList[1];
+        const currentSquareTableCell = document.querySelector(`td.${killingSquareId}`);
+        const currentSquareButton = document.querySelector(`button.${killingSquareId}`);
 
         // Update the square id in the button's class
         currentSquareButton.classList.remove(killingSquareId)
         currentSquareButton.classList.add(victimSquareId);
 
-        const dstSquareChildToReplace = [];
-        const currentSquareChildToReplace = [];
-
-        for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
-            if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
-            }
-        }
-
-        for (let i = 0; i < currentSquareTableCell.childNodes.length; i++) {
-            if (currentSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                currentSquareChildToReplace.push(currentSquareTableCell.childNodes[i]);
-            }
-        }
-
-        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareChildToReplace[0]);
+        dstSquareTableCell.replaceChild(currentSquareButton, dstSquareButton);
         currentSquareTableCell.appendChild(dstSquareButton);
 
         // Turn the victim piece into an empty button
