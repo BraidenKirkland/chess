@@ -380,27 +380,25 @@ export class Board {
     }
 
     handlePromotionSelection(typeOfPiece, colorOfPiece) {
-        // Find the last moved piece
-        let lastPiece;
-        for (const [squareId, piece] of Object.entries(this.squares)) {
-            if (piece && piece.numberOfMostRecentMove === this.numMovesMade) {
-                lastPiece = { squareId, piece };
-                break;
-            }
-        }
-
-        if (lastPiece && lastPiece.piece.canPromote()) {
+        const lastPiece = this.getLastPieceMoved();
+        if (lastPiece && lastPiece.canPromote()) {
             this.promotePiece(lastPiece.squareId, typeOfPiece, colorOfPiece);
         }
     }
 
-    retrieveGameState() {
-        const gameState = JSON.parse(localStorage.getItem('existingGameState'));
-        if(! gameState) {
-            return;
+    getLastPieceMoved() {
+        for (const [squareId, piece] of Object.entries(this.squares)) {
+            if (piece && piece.numberOfMostRecentMove === this.numMovesMade) {
+                return piece;
+            }
         }
 
-        this.repopulateSquaresObject();
+        return null;
+    }
+
+    retrieveGameState() {
+        const gameState = JSON.parse(localStorage.getItem('existingGameState'));
+        this.repopulateSquaresObject(gameState);
 
         this.turn = gameState.turn;
         this.numMovesMade = gameState.numMovesMade;
