@@ -58,26 +58,26 @@ export class GameUIManager {
         currentSquareTableCell.appendChild(dstSquareButton);
 
         // Turn the victim piece into an empty button
-        dstSquareButton.removeAttribute("id");
-        dstSquareButton.classList.remove("piece");
+        this.setButtonStateToEmpty(dstSquareButton) 
         dstSquareButton.classList.remove(victimSquareId);
-        dstSquareButton.classList.add("empty");
         dstSquareButton.classList.add(killingSquareId);
-        dstSquareButton.innerHTML = null;
     }
 
-    updateBoardAfterEnPassantTake(takingPawn, neighborSquare) {
+    updateBoardAfterEnPassantTake(takingPawn, neighborSquareId) {
         const takenPieceIcon = document.createElement('span');
         const colorTaken = takingPawn.color === 'black' ? 'white' : 'black';
         takenPieceIcon.innerHTML = piecesToSymbols['pawn'][colorTaken];
 
         // Get <button> of pawn to be removed
-        const takenButton = document.getElementsByClassName(neighborSquare)[1];
+        const takenButton = document.querySelector(`button.${neighborSquareId}`);
+        this.setButtonStateToEmpty(takenButton);
+    }
 
-        takenButton.classList.add("empty");
-        takenButton.classList.remove("piece");
-        takenButton.removeAttribute("id");
-        takenButton.innerHTML = null;
+    setButtonStateToEmpty(button) {
+        button.removeAttribute("id");
+        button.classList.remove("piece");
+        button.classList.add("empty");
+        button.innerHTML = null;
     }
 
     displayTakenPiece(victimPiece) {
