@@ -396,15 +396,11 @@ export class Board {
 
     retrieveGameState() {
         const gameState = JSON.parse(localStorage.getItem('existingGameState'));
-        const loadedSquares = gameState.squares;
-
-        for (const [position, pieceData] of Object.entries(loadedSquares)) {
-            if (pieceData) {
-                this.squares[position] = this.revivePiece(pieceData);
-            } else {
-                this.squares[position] = null;
-            }
+        if(! gameState) {
+            return;
         }
+
+        this.repopulateSquaresObject();
 
         this.turn = gameState.turn;
         this.numMovesMade = gameState.numMovesMade;
@@ -413,6 +409,16 @@ export class Board {
         this.selectedElement = null;
         if (gameState.selectedElementSquare) {
             this.selectedElement = this.squares[gameState.selectedElementSquare]
+        }
+    }
+
+    repopulateSquaresObject(gameState) {
+        for (const [position, pieceData] of Object.entries(gameState.squares)) {
+            if (pieceData) {
+                this.squares[position] = this.revivePiece(pieceData);
+            } else {
+                this.squares[position] = null;
+            }
         }
     }
 
