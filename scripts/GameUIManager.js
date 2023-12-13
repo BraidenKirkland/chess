@@ -187,8 +187,8 @@ export class GameUIManager {
     }
 
     showPromotionMenu(color) {
-        const board = document.getElementById("board");
-        const promoMenu = document.getElementsByClassName(`${color}-promotion-menu`)[0]
+        const board = document.querySelector(".game");
+        const promoMenu = document.querySelector(`.${color}-promotion-menu`);
 
         board.style.visibility = "hidden";
         promoMenu.style.visibility = "visible";
@@ -234,8 +234,8 @@ export class GameUIManager {
     }
 
     hidePromotionMenu(color) {
-        const board = document.getElementById("board");
-        const promoMenu = document.getElementsByClassName(`${color}-promotion-menu`)[0];
+        const board = document.querySelector(".game");
+        const promoMenu = document.querySelector(`.${color}-promotion-menu`);
         board.style.visibility = "visible";
         promoMenu.style.visibility = "hidden";
     }

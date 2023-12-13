@@ -107,10 +107,8 @@ export class BoardSetup {
             const letter = letters[index % 8];
             const number = numbers[Math.floor(index / 8)];
 
-            // Add board position to <td> class list
             element.classList.add(letter + number);
 
-            // Add board position to <button> class list, if it exists
             if (element.firstElementChild) {
                 element.firstElementChild.classList.add(letter + number);
             }

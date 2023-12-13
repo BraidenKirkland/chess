@@ -101,8 +101,8 @@ export class Board {
         const [newKingPosition, newRookPosition] = this.getNewKingAndRookPositions(rook, king);
 
         // Move king and rook to new positions
-        this.movePieceToEmpty(king, newKingPosition, true);
-        this.movePieceToEmpty(rook, newRookPosition, true);
+        this.movePieceToEmpty(king, newKingPosition);
+        this.movePieceToEmpty(rook, newRookPosition);
         this.changeTurn();
     }
 
@@ -138,12 +138,12 @@ export class Board {
     }
 
 
-    movePieceToEmpty(pieceToMove, newPosition, castling = false) {
-        const squareIdofPiece = pieceToMove.squareId.slice();
+    movePieceToEmpty(pieceToMove, newPosition) {
+        const squareIdOfPiece = pieceToMove.squareId.slice();
 
-        this.gameUiManager.updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece);
+        this.gameUiManager.updateSquareAfterMoveToEmptySquare(newPosition, squareIdOfPiece);
         this.squares[newPosition] = pieceToMove;
-        this.squares[squareIdofPiece] = null;
+        this.squares[squareIdOfPiece] = null;
         this.numMovesMade++;
         this.selectedElement = null;
 
@@ -151,16 +151,14 @@ export class Board {
         pieceToMove.moveCount++;
         pieceToMove.numberOfMostRecentMove = this.numMovesMade;
 
-        if(this.handlePromotion(pieceToMove, newPosition, squareIdofPiece)) {
+        if(this.handlePromotion(pieceToMove, newPosition, squareIdOfPiece)) {
             return;
         }
-
-        // this.changeTurn();
     }
 
-    handlePromotion(pieceToMove, newPosition, squareIdofPiece) {
+    handlePromotion(pieceToMove, newPosition, squareIdOfPiece) {
         if (pieceToMove.type === 'pawn') {
-            const verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdofPiece[1]));
+            const verticalDistance = Math.abs(Number(newPosition[1]) - Number(squareIdOfPiece[1]));
             pieceToMove.ranksAdvanced += verticalDistance;
 
             if (pieceToMove.canPromote()) {
@@ -172,11 +170,8 @@ export class Board {
         return false;
     }
 
-    /* 
-    Method to swap the killing piece with the piece being killed.
-    */
+    /* Method to swap the killing piece with the piece being killed. */
     takePiece(killingPiece, victimPiece) {
-        // Get the current square id of each piece
         const victimSquareId = victimPiece.squareId.slice();
         const killingSquareId = killingPiece.squareId.slice();
 
@@ -212,10 +207,13 @@ export class Board {
         const validMoves = this.getValidMovesForPiece(clickedPiece, squareId);
 
         this.processClickActions(clickedPiece, squareId, parentElementOfButton, validMoves);
+        this.performGameOverCheck();
+    }
 
+    performGameOverCheck() {
         const [checkmate, stalemate, draw] = this.checkmateStalemateOrDraw();
 
-        if(checkmate || stalemate || draw) {
+        if (checkmate || stalemate || draw) {
             const winningColor = this.moveValidator.opposingColor(this.turn);
             this.gameUiManager.showGameOverMenu(winningColor, checkmate, stalemate);
             const gameOverInfo = {
@@ -237,6 +235,7 @@ export class Board {
     }
 
     getClickedSquareId(eventObject) {
+        // The second class represents the square id
         return eventObject.target.classList[1];
     }
 
