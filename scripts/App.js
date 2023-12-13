@@ -1,7 +1,12 @@
 import { ButtonUIManager } from "./ButtonUIManager.js";
 import { Board } from "./Board.js";
 import { BoardSetup } from "./BoardSetup.js";
-import { setUpNewGame, showGameAndHideWelcome, clearTakenPieces } from './helpers.js';
+import { 
+    setUpNewGame, 
+    showGameAndHideWelcome, 
+    clearTakenPieces,
+    populateGameOverMenu
+} from './helpers.js';
 
 export class App {
     constructor() {
@@ -11,6 +16,13 @@ export class App {
 
     setupButtonAndRefreshEventListeners() {
         document.addEventListener('DOMContentLoaded', function () {
+            if(localStorage.getItem('gameOver')) {
+                const {winningColor, checkmate, stalemate} = JSON.parse(localStorage.getItem('gameOver'));
+                populateGameOverMenu(winningColor, checkmate, stalemate);
+                
+                return;
+            }
+
             if (localStorage.getItem('existingGameState')) {
                 showGameAndHideWelcome();
             }

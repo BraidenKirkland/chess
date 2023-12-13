@@ -44,7 +44,7 @@ export class Board {
 
     changeTurn() {
         this.turn = (this.turn === 'white' ? 'black' : 'white');
-        
+
         saveGameState(this);
 
         if(this.moveValidator.inCheck(this.turn, this.squares, this.numMovesMade)) {
@@ -217,7 +217,14 @@ export class Board {
 
         if(checkmate || stalemate || draw) {
             const winningColor = this.moveValidator.opposingColor(this.turn);
-            this.gameUiManager.showGameOverMenu(winningColor, checkmate, stalemate, draw);
+            this.gameUiManager.showGameOverMenu(winningColor, checkmate, stalemate);
+            const gameOverInfo = {
+                winningColor: winningColor,
+                checkmate: checkmate,
+                stalemate: stalemate,
+            };
+
+            localStorage.setItem('gameOver', JSON.stringify(gameOverInfo));
         }
     }
 

@@ -1,5 +1,5 @@
 import { piecesToSymbols } from "./helpers.js";
-import { setUpGame } from './helpers.js';
+import { populateGameOverMenu } from './helpers.js';
 
 export class GameUIManager {
     getBoardPieces() {
@@ -249,31 +249,8 @@ export class GameUIManager {
         }, 1500);
     }
     
-    showGameOverMenu(winningColor, checkmate, stalemate, draw) {
-        document.querySelector('.game-over').style.display = 'block';
-        document.querySelector('.game').style.display = 'none';
-
-        let reasonForGameOver;
-        if(checkmate) {
-            reasonForGameOver = 'Checkmate';
-        }else if(stalemate) {
-            reasonForGameOver = 'Stalemate';
-        }else {
-            reasonForGameOver = 'Draw';
-        }
-
-
-        if(checkmate) {
-            const capitalizedWinningColor = winningColor.charAt(0).toUpperCase() + winningColor.slice(1);
-            document.querySelector('.winner-color').innerText = `${capitalizedWinningColor} Wins!`;
-            document.querySelector('.winner-king').innerHTML = '&#9812';
-        }
-
-        document.querySelector('.game-over-type').innerText = reasonForGameOver + '!';
-    }
-
-    setUpButtonEventListeners() {
-        
+    showGameOverMenu(winningColor, checkmate, stalemate) {
+        populateGameOverMenu(winningColor, checkmate, stalemate);
     }
 
     indicateTurn(turn) {

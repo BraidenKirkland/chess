@@ -129,6 +129,7 @@ export const updateElementDisplay = (className, displayType) => {
 }
 
 export const setUpNewGame = () => {
+    localStorage.removeItem('gameOver');
     localStorage.removeItem('existingGameState');
     setUpGame();
 }
@@ -155,8 +156,25 @@ export const clearTakenPieces = () => {
     document.querySelector('.taken-pieces-white-list').innerHTML = '';
 }
 
-export const clearLocalStorageItem = (key) => {
-    localStorage.removeItem(key);
+export const populateGameOverMenu = (winningColor, checkmate, stalemate) => {
+    updateElementDisplay('game-over', 'block');
+    updateElementDisplay('game', 'none');
+    updateElementDisplay('start-game', 'none');
+
+    let reasonForGameOver;
+    if (checkmate) {
+        reasonForGameOver = 'Checkmate';
+    } else if (stalemate) {
+        reasonForGameOver = 'Stalemate';
+    } else {
+        reasonForGameOver = 'Draw';
+    }
+
+    if (checkmate) {
+        const capitalizedWinningColor = winningColor.charAt(0).toUpperCase() + winningColor.slice(1);
+        document.querySelector('.winner-color').innerText = `${capitalizedWinningColor} Wins!`;
+        document.querySelector('.winner-king').innerHTML = '&#9812';
+    }
+
+    document.querySelector('.game-over-type').innerText = reasonForGameOver + '!';   
 }
-
-

@@ -43,6 +43,7 @@ export class MoveValidator {
 
     isValidPawnDiagonalMove(srcSquareId, dstSquareId, piece, squares, numMovesMade) {
         if (piece.type !== 'pawn') return false;
+        if (!(dstSquareId in squares)) return false;
 
         const [srcX, srcY] = getNumericPosition(srcSquareId);
         const [dstX, dstY] = getNumericPosition(dstSquareId);
