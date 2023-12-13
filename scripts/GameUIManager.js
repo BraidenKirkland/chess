@@ -80,16 +80,13 @@ export class GameUIManager {
         takenButton.innerHTML = null;
     }
 
-    displayTakenPiece(victimPiece, whitePiecesKilled, blackPiecesKilled) {
+    displayTakenPiece(victimPiece) {
         const takenPieceIcon = document.createElement('span');
-        takenPieceIcon.innerHTML = piecesToSymbols[victimPiece.type][victimPiece.color];
+        takenPieceIcon.innerHTML = victimPiece.getSymbol();
 
         if (victimPiece.color === 'white') {
-
-            whitePiecesKilled.push(victimPiece.getSymbol())
             document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
         } else {
-            blackPiecesKilled.push(victimPiece.getSymbol());
             document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
         }
     }

@@ -126,7 +126,16 @@ export class Board {
         this.movePieceToEmpty(takingPawn, diagonalSquare);
         this.squares[neighborSquare] = null;
         this.gameUiManager.updateBoardAfterEnPassantTake(takingPawn, neighborSquare);
-        this.gameUiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
+        this.gameUiManager.displayTakenPiece(victimPiece);
+        this.addPieceToTakenPieces(victimPiece)
+    }
+
+    addPieceToTakenPieces(victimPiece) {
+        if (victimPiece.color === 'white') {
+            this.whitePiecesKilled.push(victimPiece.getSymbol())
+        } else {
+            this.blackPiecesKilled.push(victimPiece.getSymbol());
+        }
     }
 
     getNeighborSquareForEnPassant(takingPawn, diagonalSquare) {
