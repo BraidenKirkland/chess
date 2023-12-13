@@ -157,10 +157,9 @@ export class GameUIManager {
     }
 
     showPromotionMenu(color) {
-        const board = document.querySelector(".game");
+        const game = document.querySelector(".game");
         const promoMenu = document.querySelector(`.${color}-promotion-menu`);
-
-        board.style.visibility = "hidden";
+        game.style.visibility = "hidden";
         promoMenu.style.visibility = "visible";
     }
 
@@ -185,7 +184,6 @@ export class GameUIManager {
 
     setupPromotionEventListeners(promotionCallback) {
         const promotionMenuPieces = [...document.querySelectorAll(".promo")];
-
         promotionMenuPieces.forEach(button => {
             button.addEventListener('click', event => {
                 const pieceTypeAndColorClass = event.target.classList[1];
@@ -203,9 +201,9 @@ export class GameUIManager {
     }
 
     hidePromotionMenu(color) {
-        const board = document.querySelector(".game");
+        const game = document.querySelector(".game");
         const promoMenu = document.querySelector(`.${color}-promotion-menu`);
-        board.style.visibility = "visible";
+        game.style.visibility = "visible";
         promoMenu.style.visibility = "hidden";
     }
 
