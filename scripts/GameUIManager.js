@@ -105,14 +105,14 @@ export class GameUIManager {
         })
     }
 
-    updateSquareAfterMoveToEmptySquare(newPosition, squareIdofPiece) {
+    updateSquareAfterMoveToEmptySquare(newPosition, squareIdOfPiece) {
         // Get table cell (<td>) and button elements for destination (empty) square
-        const dstSquareTableCell = document.getElementsByClassName(newPosition)[0];
-        const dstSquareButton = document.getElementsByClassName(newPosition)[1];
+        const dstSquareTableCell = document.querySelector(`td.${newPosition}`);
+        const dstSquareButton = document.querySelector(`button.${newPosition}`);
 
         // Get table cell (<td>) and button elements for piece square
-        const pieceSquareTableCell = document.getElementsByClassName(squareIdofPiece)[0];
-        const pieceSquareButton = document.getElementsByClassName(squareIdofPiece)[1];
+        const pieceSquareTableCell = document.querySelector(`td.${squareIdOfPiece}`);
+        const pieceSquareButton = document.querySelector(`button.${squareIdOfPiece}`);
 
         // Need to replace the children of the table cells
         const dstSquareChildToReplace = [];
@@ -127,12 +127,12 @@ export class GameUIManager {
         pieceSquareTableCell.appendChild(dstSquareButton);
 
         // Update the class list of the destination square button
-        dstSquareButton.classList.add(squareIdofPiece);
+        dstSquareButton.classList.add(squareIdOfPiece);
         dstSquareButton.classList.remove(newPosition);
 
         // Update the class list of the piece square button
         pieceSquareButton.classList.add(newPosition);
-        pieceSquareButton.classList.remove(squareIdofPiece);
+        pieceSquareButton.classList.remove(squareIdOfPiece);
     }
 
     showHighlightingForClickedPieceAndMoves(parentElementOfButton, buttonColor, validMoves) {
