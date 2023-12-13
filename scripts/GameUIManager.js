@@ -206,7 +206,7 @@ export class GameUIManager {
             // Add board position to <td> class list
             element.classList.add(letter + number);
 
-            // Add board position to <button> class list, if it exists
+            // Add board position to <button> class list
             if (element.firstElementChild) {
                 element.firstElementChild.classList.add(letter + number);
             }
@@ -218,10 +218,9 @@ export class GameUIManager {
 
         promotionMenuPieces.forEach(button => {
             button.addEventListener('click', event => {
-                const importantClass = event.target.classList[1];
-                const [typeOfPiece, colorOfPiece] = importantClass.split("-");
+                const pieceTypeAndColorClass = event.target.classList[1];
+                const [typeOfPiece, colorOfPiece] = pieceTypeAndColorClass.split("-");
 
-                // Invoke the callback function with the necessary information
                 promotionCallback(typeOfPiece, colorOfPiece);
             });
         });
@@ -229,7 +228,7 @@ export class GameUIManager {
 
     updateSquareWithPromotedPiece(squareId, piece) {
         const symbol = piecesToSymbols[piece.type][piece.color];
-        const squareButton = document.getElementsByClassName(squareId)[1];
+        const squareButton = document.querySelector(`button.${squareId}`)
         squareButton.innerHTML = symbol;
     }
 
@@ -264,8 +263,11 @@ export class GameUIManager {
 
     addCorrectButtonsToBoard(squares) {
         for (const [squareId, piece] of Object.entries(squares)) {
-            const squareElement = document.querySelector(`.${squareId}`);
+            
+            // Get the outer <td> element
+            const squareElement = document.querySelector(`td.${squareId}`);
 
+            // Add the correct button as the innerHtml for the <td> element
             if (piece) {
                 squareElement.innerHTML = `<button class="piece ${squareId}">${piece.getSymbol()}</button>`;
             } else {
