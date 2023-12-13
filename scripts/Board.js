@@ -146,7 +146,6 @@ export class Board {
         return diagonalSquare[0] + String((Number(diagonalSquare[1]) + 1));
     }
 
-
     movePieceToEmpty(pieceToMove, newPosition) {
         const squareIdOfPiece = pieceToMove.squareId.slice();
 
