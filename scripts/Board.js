@@ -195,6 +195,7 @@ export class Board {
 
         this.gameUiManager.updateBoardAfterTake(victimSquareId, killingSquareId);
         this.gameUiManager.displayTakenPiece(victimPiece, this.whitePiecesKilled, this.blackPiecesKilled);
+        this.addPieceToTakenPieces(victimPiece);
 
         if (killingPiece.canPromote()) {
             this.gameUiManager.showPromotionMenu(killingPiece.color)

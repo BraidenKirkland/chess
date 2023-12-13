@@ -46,7 +46,6 @@ export class GameUIManager {
     updateBoardAfterTake(victimSquareId, killingSquareId) {
         const dstSquareTableCell = document.querySelector(`td.${victimSquareId}`);
         const dstSquareButton = document.querySelector(`button.${victimSquareId}`);
-
         const currentSquareTableCell = document.querySelector(`td.${killingSquareId}`);
         const currentSquareButton = document.querySelector(`button.${killingSquareId}`);
 
@@ -57,7 +56,7 @@ export class GameUIManager {
         dstSquareTableCell.replaceChild(currentSquareButton, dstSquareButton);
         currentSquareTableCell.appendChild(dstSquareButton);
 
-        // Turn the victim piece into an empty button
+        // Turn the victim piece button into an empty button
         this.setButtonStateToEmpty(dstSquareButton) 
         dstSquareButton.classList.remove(victimSquareId);
         dstSquareButton.classList.add(killingSquareId);
@@ -85,25 +84,24 @@ export class GameUIManager {
         takenPieceIcon.innerHTML = victimPiece.getSymbol();
 
         if (victimPiece.color === 'white') {
-            document.getElementsByClassName('taken-pieces-white-list')[0].appendChild(takenPieceIcon);
+            document.querySelector('.taken-pieces-white-list').appendChild(takenPieceIcon);
         } else {
-            document.getElementsByClassName('taken-pieces-black-list')[0].appendChild(takenPieceIcon);
+            document.querySelector('.taken-pieces-black-list').appendChild(takenPieceIcon);
         }
     }
 
     showTakenPiecesAfterGameLoad(whitePiecesKilled, blackPiecesKilled) {
-        const takenWhitePiecesList = document.getElementsByClassName('taken-pieces-white-list')[0];
-        whitePiecesKilled.forEach(pieceSymbol => {
-            const takenPieceIcon = document.createElement('span');
-            takenPieceIcon.innerHTML = pieceSymbol;
-            takenWhitePiecesList.appendChild(takenPieceIcon);
-        });
+        const takenWhitePiecesList = document.querySelector('.taken-pieces-white-list');
+        const takenBlackPiecesList = document.querySelector('.taken-pieces-black-list');
+        this.addTakenPiecesBackToUi(takenWhitePiecesList, whitePiecesKilled);
+        this.addTakenPiecesBackToUi(takenBlackPiecesList, blackPiecesKilled);
+    }
 
-        const takenBlackPiecesList = document.getElementsByClassName('taken-pieces-black-list')[0];
-        blackPiecesKilled.forEach(pieceSymbol => {
+    addTakenPiecesBackToUi(takenPiecesList, piecesTaken) {
+        piecesTaken.forEach(pieceSymbol => {
             const takenPieceIcon = document.createElement('span');
             takenPieceIcon.innerHTML = pieceSymbol;
-            takenBlackPiecesList.appendChild(takenPieceIcon);
+            takenPiecesList.appendChild(takenPieceIcon);
         })
     }
 
