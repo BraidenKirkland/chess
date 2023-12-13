@@ -1,6 +1,6 @@
 import { createPiece } from "./Pieces/PieceFactory.js"
 import { MoveValidator } from "./MoveValidator.js";
-import { getNumericPosition, getRegularPosition, saveGameState } from "./helpers.js";
+import { getNumericPosition, getRegularPosition } from "./helpers.js";
 import { GameUIManager } from "./GameUIManager.js";
 
 export class Board {
@@ -45,7 +45,7 @@ export class Board {
     changeTurn() {
         this.turn = (this.turn === 'white' ? 'black' : 'white');
 
-        saveGameState(this);
+        this.saveGameState(this);
 
         if(this.moveValidator.inCheck(this.turn, this.squares, this.numMovesMade)) {
             const kingPosition = this.moveValidator.getKingPosition(this.turn, this.squares);
@@ -441,4 +441,49 @@ export class Board {
 
         return piece;
     }
+
+    saveGameState() {
+        const plainSquaresObject = this.createPlainSquaresObject(this.squares);
+
+        const gameState = {
+            turn: this.turn,
+            numMovesMade: this.numMovesMade,
+            squares: plainSquaresObject,
+            whitePiecesKilled: this.whitePiecesKilled,
+            blackPiecesKilled: this.blackPiecesKilled,
+            selectedElementSquare: this.selectedElement ? this.selectedElement.squareId : null // You might need to handle serialization for this
+        };
+
+        localStorage.setItem('existingGameState', JSON.stringify(gameState));
+    }
+
+    createPlainSquaresObject() {
+        const plainSquaresObject = {};
+        for (const [position, piece] of Object.entries(this.squares)) {
+            if (piece) {
+                plainSquaresObject[position] = this.createPlainPieceObject(piece);
+            } else {
+                plainSquaresObject[position] = null;
+            }
+        }
+
+        return plainSquaresObject;
+    }
+
+    createPlainPieceObject(piece){
+        if (!piece) {
+            return null;
+        }
+
+        return {
+            color: piece.color,
+            type: piece.type,
+            moveCount: piece.moveCount,
+            killCount: piece.killCount,
+            ranksAdvanced: piece.ranksAdvanced,
+            limitations: piece.limitations,
+            squareId: piece.squareId,
+            numberOfMostRecentMove: piece.numberOfMostRecentMove
+        };
+    };
 }

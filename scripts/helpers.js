@@ -43,51 +43,6 @@ export const piecesToSymbols = {
     }
 };
 
-export const saveGameState = (board) => {
-    const plainSquaresObject = createPlainSquaresObject(board.squares);
-
-    const gameState = {
-        turn: board.turn,
-        numMovesMade: board.numMovesMade,
-        squares: plainSquaresObject,
-        whitePiecesKilled: board.whitePiecesKilled,
-        blackPiecesKilled: board.blackPiecesKilled,
-        selectedElementSquare: board.selectedElement ? board.selectedElement.squareId : null // You might need to handle serialization for this
-    };
-
-    localStorage.setItem('existingGameState', JSON.stringify(gameState));
-}
-
-const createPlainSquaresObject = (squares) => {
-    const plainSquaresObject = {};
-    for (const [position, piece] of Object.entries(squares)) {
-        if (piece) {
-            plainSquaresObject[position] = createPlainPieceObject(piece);
-        } else {
-            plainSquaresObject[position] = null;
-        }
-    }
-
-    return plainSquaresObject;
-}
-
-const createPlainPieceObject = (piece) => {
-    if(!piece) {
-        return null;
-    }
-
-    return {
-        color: piece.color,
-        type: piece.type,
-        moveCount: piece.moveCount,
-        killCount: piece.killCount,
-        ranksAdvanced: piece.ranksAdvanced,
-        limitations: piece.limitations,
-        squareId: piece.squareId,
-        numberOfMostRecentMove: piece.numberOfMostRecentMove
-    };
-};
-
 export const updateElementDisplay = (className, displayType) => {
     document.querySelector(`.${className}`).style.display = displayType;
 }
