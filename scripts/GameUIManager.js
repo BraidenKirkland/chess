@@ -114,16 +114,8 @@ export class GameUIManager {
         const pieceSquareTableCell = document.querySelector(`td.${squareIdOfPiece}`);
         const pieceSquareButton = document.querySelector(`button.${squareIdOfPiece}`);
 
-        // Need to replace the children of the table cells
-        const dstSquareChildToReplace = [];
-        for (let i = 0; i < dstSquareTableCell.childNodes.length; i++) {
-            if (dstSquareTableCell.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-                dstSquareChildToReplace.push(dstSquareTableCell.childNodes[i]);
-            }
-        }
-
         // Replace the empty square's button with the piece's button
-        dstSquareTableCell.replaceChild(pieceSquareButton, dstSquareChildToReplace[0]);
+        dstSquareTableCell.replaceChild(pieceSquareButton, dstSquareButton);
         pieceSquareTableCell.appendChild(dstSquareButton);
 
         // Update the class list of the destination square button
