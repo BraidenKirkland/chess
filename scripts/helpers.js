@@ -1,4 +1,3 @@
-import { createPiece } from "./Pieces/PieceFactory.js"
 import { BoardSetup } from "./BoardSetup.js";
 import { Board } from "./Board.js";
 
@@ -59,29 +58,6 @@ export const saveGameState = (board) => {
     localStorage.setItem('existingGameState', JSON.stringify(gameState));
 }
 
-export const retrieveGameState = (board) => {
-    const gameState = JSON.parse(localStorage.getItem('existingGameState'));
-    const loadedSquares = gameState.squares;
-
-    board.squares = {};
-    for (const [position, pieceData] of Object.entries(loadedSquares)) {
-        if(pieceData) {
-            board.squares[position] = revivePiece(pieceData);
-        }else {
-            board.squares[position] = null;
-        }
-    }
-
-    board.turn = gameState.turn;
-    board.numMovesMade = gameState.numMovesMade;
-    board.whitePiecesKilled = gameState.whitePiecesKilled;
-    board.blackPiecesKilled = gameState.blackPiecesKilled;
-    board.selectedElement = null;
-    if(gameState.selectedElementSquare) {
-        board.selectedElement = board.squares[gameState.selectedElementSquare]
-    }
-}
-
 const createPlainSquaresObject = (squares) => {
     const plainSquaresObject = {};
     for (const [position, piece] of Object.entries(squares)) {
@@ -111,18 +87,6 @@ const createPlainPieceObject = (piece) => {
         numberOfMostRecentMove: piece.numberOfMostRecentMove
     };
 };
-
-const revivePiece = (pieceData) => {
-    const piece = createPiece(pieceData.color, pieceData.type);
-    piece.moveCount =  pieceData.moveCount,
-    piece.killCount =  pieceData.killCount,
-    piece.ranksAdvanced =  pieceData.ranksAdvanced,
-    piece.limitations =  pieceData.limitations,
-    piece.squareId =  pieceData.squareId
-    piece.numberOfMostRecentMove = pieceData.numberOfMostRecentMove
-
-    return piece;
-}
 
 export const updateElementDisplay = (className, displayType) => {
     document.querySelector(`.${className}`).style.display = displayType;
